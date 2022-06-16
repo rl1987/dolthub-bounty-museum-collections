@@ -7,8 +7,7 @@ from museums.items import ObjectItem
 class LouvreSpider(scrapy.Spider):
     name = 'louvre'
     allowed_domains = ['louvre.fr']
-    #start_urls = ['https://collections.louvre.fr/en/recherche?page=1&limit=100']
-    start_urls = ['https://collections.louvre.fr/en/recherche?page=1&limit=100&location%5B0%5D=147894']
+    start_urls = ['https://collections.louvre.fr/en/recherche?page=1&limit=100']
 
     def start_requests(self):
         yield scrapy.Request(self.start_urls[0], callback=self.parse_search_page)
