@@ -15,7 +15,7 @@ resource "digitalocean_droplet" "server" {
   image     = "debian-11-x64"
   name      = "dhdb-museum-collections"
   region    = "sfo3"
-  size      = "s-1vcpu-1gb"
+  size      = "8vcpu-16g"
   ssh_keys  = ["50:ba:8f:a6:1a:e5:82:f8:57:5b:a0:c5:6e:00:f6:99"]
   user_data = file("provision.sh")
 
