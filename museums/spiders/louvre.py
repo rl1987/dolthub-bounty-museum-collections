@@ -2,6 +2,8 @@ import scrapy
 
 from urllib.parse import urlencode, urlparse, parse_qsl, urljoin
 
+from museums.items import ObjectItem
+
 class LouvreSpider(scrapy.Spider):
     name = 'louvre'
     allowed_domains = ['louvre.fr']
