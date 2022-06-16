@@ -45,7 +45,7 @@ class LouvreSpider(scrapy.Spider):
         item['department'] = response.xpath('//div[./div[text()="Collection"]]/div[last()]/a/text()').get()
         item['category'] = response.xpath('//div[./div[text()="Category"]]/div[last()]/a/text()').get()
         item['title'] = response.xpath('//h1[@class="notice__title h_1"]/text()').get()
-        item['description'] = ''.join(response.xpath('//div[./div[text()="Description/Features"]]/div[last()]/text()').getall()).strip()
+        item['description'] = ''.join(response.xpath('//div[./h2[text()="Description"]]//div[./div[text()="Description/Features"]]/div[last()]/text()').getall()).strip()
         item['current_location'] = ' '.join(response.xpath('//div[./div[text()="Current location"]]/div[last()]/div/text()').getall()).strip()
         try:
             item['dimensions'] = response.xpath('//div[./div[text()="Dimensions"]]/div[last()]/text()').get().strip()
@@ -55,17 +55,12 @@ class LouvreSpider(scrapy.Spider):
         item['inscription'] = ' '.join(response.xpath('//div[./div[text()="Inscriptions"]]/div[last()]/text()').getall()).strip()
         item['provenance'] = ' '.join(response.xpath('//div[./div[text()="Object history"]]/div[last()]/text()').getall()).strip() # XXX: is this correct?
 
-        try:
-            item['materials'] = response.xpath('//div[./div[text()="Materials and techniques"]]/div[last()]/text()').get().strip()
-        except:
-            pass
-
+        item['materials'] = ' - '.join(response.xpath('//div[./div[text()="Materials"]]/div[last()]/a/text()').getall()).strip()
         item['technique'] = ' - '.join(response.xpath('//div[./div[text()="Techniques"]]/div[last()]/a/text()').getall()).strip()
         # XXX: from_location
         # XXX: culture
         item['date_description'] = response.xpath('//div[./div[text()="Date"]]/div[last()]/text()').get()
-        # XXX: year_from
-        # XXX: year_to
+
         item['maker_full_name'] = response.xpath('//div[./div[text()="Artist/maker / School / Artistic centre"]]/div[last()]/a[1]/text()').get()
         # XXX: maker_first_name, maker_last_name, maker_birth_year, maker_death_year, maker_role, maker_gender
         try:
@@ -87,6 +82,6 @@ class LouvreSpider(scrapy.Spider):
             pass
 
         item['source_1'] = response.url
-        item['source_2'] = response.xpath('//span[contains(text(), "JSON Record")]/a/@href').get()
+        item['source_2'] = response.xpath('//span[contains(text(), "JSON Record")]/a/@href').get() # TODO: consider also parsing the JSON file
 
         yield item
