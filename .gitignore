@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+*.swp
+.DS_Store
+*.plan
+*.hcl
+*.tfstate
+.terraform/
