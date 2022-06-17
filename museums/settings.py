@@ -60,11 +60,16 @@ ROBOTSTXT_OBEY = False
 #    'scrapy.extensions.telnet.TelnetConsole': None,
 #}
 
+TWILIO_ACCOUNT_SID="AC66f9624c713fb8403dc4a153c3f69615"
+TWILIO_API_TOKEN="de07859809be34d8237013db5381a7d2"
+FROM_PHONE_NUMBER="+19807372044"
+TO_PHONE_NUMBER="+37061021232"
+
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'museums.pipelines.MuseumsPipeline': 300,
-#}
+ITEM_PIPELINES = {
+    'museums.pipelines.NotificationPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
