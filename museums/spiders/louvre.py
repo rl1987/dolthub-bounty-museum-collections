@@ -1,5 +1,6 @@
 import scrapy
 
+import json
 from urllib.parse import urlencode, urlparse, parse_qsl, urljoin
 
 from museums.items import ObjectItem
@@ -11,6 +12,20 @@ class LouvreSpider(scrapy.Spider):
 
     def start_requests(self):
         yield scrapy.Request(self.start_urls[0], callback=self.parse_search_page)
+
+    def _get_maker_birth_year(self, creator_dict):
+        for date_dict in creator_dict.get("dates", []):
+            if date_dict.get("type") == "date 1" or date_dict.get("type") == "date de naissance":
+                return date_dict.get("date")
+
+        return ""
+
+    def _get_maker_death_year(self, creator_dict):
+        for date_dict in creator_dict.get("dates", []):
+            if date_dict.get("type") == "date 2" or date_dict.get("type") == "date de mort":
+                return date_dict.get("date")
+
+        return ""
 
     def parse_search_page(self, response):
         for artwork_link in response.xpath('//div[@class="card__outer"]//a/@href').getall():
@@ -63,10 +78,6 @@ class LouvreSpider(scrapy.Spider):
 
         item['maker_full_name'] = response.xpath('//div[./div[text()="Artist/maker / School / Artistic centre"]]/div[last()]/a[1]/text()').get()
         # XXX: maker_first_name, maker_last_name, maker_birth_year, maker_death_year, maker_role, maker_gender
-        try:
-            item['acquired_year'] = response.xpath('//div[./div[text()="Acquisition date"]]/div[last()]/text()').get().strip()
-        except:
-            pass
 
         try:
             item['acquired_from'] = response.xpath('//div[./div[text()="Collector / Previous owner / Commissioner / Archaeologist / Dedicatee"]]/div[last()]/text()').get().strip() # XXX: sometimes there's links in this
@@ -84,4 +95,41 @@ class LouvreSpider(scrapy.Spider):
         item['source_1'] = response.url
         item['source_2'] = response.xpath('//span[contains(text(), "JSON Record")]/a/@href').get() # TODO: consider also parsing the JSON file
 
+        yield scrapy.Request(item['source_2'], callback=self.parse_artwork_json, meta={'item':item})
+
+    def parse_artwork_json(self, response):
+        item = response.meta.get('item')
+
+        json_dict = json.loads(response.text)
+
+        item['object_number'] = json_dict.get("arkId")
+
+        if json_dict.get("acquisitionDetails") is not None and len(json_dict.get("acquisitionDetails")) > 0:
+            try:
+                item['acquired_year'] = json_dict.get('acquisitionDetails')[-1].get('dates')[-1].get('startYear')
+            except:
+                pass
+
+        creators = json_dict.get("creator")
+        if creators is not None and len(creators) > 0:
+            maker_full_names = list(map(lambda c: c.get("label"), creators))
+            maker_full_names = "|".join(maker_full_names)
+            item['maker_full_name'] = maker_full_names
+
+            maker_roles = list(map(lambda c: c.get("creatorRole"), creators))
+            maker_roles = "|".join(maker_roles)
+            item['maker_role'] = maker_roles
+
+            maker_birth_years = list(map(lambda c: self._get_maker_birth_year(c), creators))
+            maker_birth_years = "|".join(maker_birth_years)
+            item['maker_birth_year'] = maker_birth_years
+
+            maker_death_years = list(map(lambda c: self._get_maker_death_year(c), creators))
+            maker_death_years = "|".join(maker_death_years)
+            item['maker_death_year'] = maker_death_years
+    
+        item['provenance'] = json_dict.get("provenance")
+
         yield item
+
+
