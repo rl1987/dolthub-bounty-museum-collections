@@ -135,5 +135,6 @@ dmypy.json
 *.tfstate
 .terraform/
 *.csv
+*.csv#
 *.tfstate
 *.tfstate.backup
