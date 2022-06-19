@@ -68,6 +68,7 @@ TO_PHONE_NUMBER="+37061021232"
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
+    'museums.pipelines.ConstraintEnforcementPipeline': 250,
     'museums.pipelines.NotificationPipeline': 300,
 }
 
