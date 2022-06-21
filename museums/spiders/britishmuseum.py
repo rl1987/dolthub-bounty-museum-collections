@@ -96,7 +96,68 @@ class BritishmuseumSpider(scrapy.Spider):
 
         item['dimensions'] = "|".join(dimensions)
 
+        if type(xtemplate_full_json_dict.get("$Inscriptions")) == list:
+            inscriptions = []
+
+            for inscription_dict in xtemplate_full_json_dict.get("$Inscriptions"):
+                content = inscription_dict.get("Inscription content")
+                if content is not None:
+                    inscriptions.append(content)
+
+            item['inscription'] = "|".join(inscriptions)
+
+        if type(xtemplate_full_json_dict.get("Materials")) == dict:
+            materials_html = xtemplate_full_json_dict.get("Materials").get("value")
+            sel = Selector(text=materials_html)
+            item['materials'] = " ".join(sel.xpath("//text()").getall())
+        elif type(xtemplate_full_json_dict.get("Materials")) == list:
+            materials = []
+
+            for material_dict in xtemplate_full_json_dict.get("Materials"):
+                materials_html = material_dict.get("value")
+                sel = Selector(text=materials_html)
+                materials.append(sel.xpath('//span[@class="vterm"]/text()').get())
+
+            item['materials'] = "|".join(materials)
+
+        if type(xtemplate_full_json_dict.get("Technique")) == dict:
+            technique_html = xtemplate_full_json_dict.get("Technique").get("value")
+            sel = Selector(text=technique_html)
+            item['technique'] = " ".join(sel.xpath("//text()").getall())
+
+        if type(xtemplate_full_json_dict.get("Findspot")) == list:
+            findspots = []
+            
+            for findspot_dict in xtemplate_full_json_dict.get("Findspot"):
+                value_html = findspot_dict.get("value")
+                sel = Selector(text=value_html)
+                findspots.append(sel.xpath('//span[@class="vterm"]/text()').get())
+
+            item['from_location'] = "|".join(findspots)
+        
+        if type(xtemplate_full_json_dict.get("Cultures/periods")) == dict:
+            culture_html = xtemplate_full_json_dict.get("Cultures/periods").get("value")
+            sel = Selector(text=culture_html)
+            item['culture'] = sel.xpath('//span[@class="vterm"]/text()').get()
+
+        if type(xtemplate_full_json_dict.get("Producer name")) == dict:
+            author_html = xtemplate_full_json_dict.get("Producer name").get("value")
+            sel = Selector(text=author_html)
+            item['maker_full_name'] = sel.xpath('//span[@class="vterm"]/text()').get()
+
+        item['acquired_year'] = xtemplate_full_json_dict.get("Acquisition date")
+
+        if type(xtemplate_full_json_dict.get("Acquisition name")) == dict:
+            name_html = xtemplate_full_json_dict.get("Acquisition name").get("value")
+            sel = Selector(text=name_html)
+            item['acquired_from'] = sel.xpath('//span[@class="vterm"]/text()').get()
+
+        item['date_description'] = xtemplate_full_json_dict.get("Production date")
+
+        # TODO: credit_line, image_url
+
         item['source_1'] = 'https://www.britishmuseum.org/collection/object/' + params.get("id")
         item['source_2'] = response.url
 
         yield item
+
