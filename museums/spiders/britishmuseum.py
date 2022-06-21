@@ -2,7 +2,7 @@ import scrapy
 from scrapy.selector import Selector
 
 import json
-from urllib.parse import urlparse, parse_qsl, urlencode
+from urllib.parse import urlparse, parse_qsl, urlencode, urljoin
 
 from museums.items import ObjectItem
 
@@ -154,7 +154,22 @@ class BritishmuseumSpider(scrapy.Spider):
 
         item['date_description'] = xtemplate_full_json_dict.get("Production date")
 
-        # TODO: credit_line, image_url
+        credit_line = None
+        image_url = None
+
+        for mm_dict in source_dict.get("multimedia", []):
+            credit_line = mm_dict.get("legal", dict()).get("credit_line")
+
+            if mm_dict.get("type", dict()).get("type") == "image":
+                image_url = mm_dict.get("processed", dict()).get("preview", dict()).get("location")
+            if credit_line is not None and image_url is not None:
+                break
+
+        if image_url is not None:
+            image_url = urljoin("http://media.britishmuseum.org/media/", image_url)
+
+        item['credit_line'] = credit_line
+        item['image_url'] = image_url
 
         item['source_1'] = 'https://www.britishmuseum.org/collection/object/' + params.get("id")
         item['source_2'] = response.url
