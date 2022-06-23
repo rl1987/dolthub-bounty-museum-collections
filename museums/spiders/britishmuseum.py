@@ -20,6 +20,9 @@ class BritishmuseumSpider(scrapy.Spider):
  
         hits = json_dict.get("hits", dict()).get("hits", [])
 
+        if len(hits) == 0:
+            return
+
         for hit in hits:
             api_id = hit.get("_id")
 
