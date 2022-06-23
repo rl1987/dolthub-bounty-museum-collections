@@ -85,6 +85,15 @@ class BritishmuseumSpider(scrapy.Spider):
 
         item['department'] = xtemplate_full_json_dict.get("Department")
         item['description'] = " ".join(xtemplate_full_json_dict.get("Description", []))
+
+        description_parts = []
+
+        for d in xtemplate_full_json_dict.get("Description", []):
+            sel = Selector(text=d)
+            description_parts.append(" ".join(sel.xpath("//text()").getall()))
+
+        item['description'] = " ".join(description_parts)
+
         item['current_location'] = xtemplate_full_json_dict.get("Location")
         
         dimensions = []
@@ -146,6 +155,10 @@ class BritishmuseumSpider(scrapy.Spider):
             item['maker_full_name'] = sel.xpath('//span[@class="vterm"]/text()').get()
 
         item['acquired_year'] = xtemplate_full_json_dict.get("Acquisition date")
+        if item.get('acquired_year') is not None and '<span' in item.get('acquired_year'):
+            html_str = item['acquired_year']
+            sel = Selector(text=html_str)
+            item['acquired_year'] = sel.xpath('//text()').get()
 
         if type(xtemplate_full_json_dict.get("Acquisition name")) == dict:
             name_html = xtemplate_full_json_dict.get("Acquisition name").get("value")
@@ -153,6 +166,10 @@ class BritishmuseumSpider(scrapy.Spider):
             item['acquired_from'] = sel.xpath('//span[@class="vterm"]/text()').get()
 
         item['date_description'] = xtemplate_full_json_dict.get("Production date")
+        if item.get('date_description') is not None and '<span' in item.get('date_description'):
+            dd = item['date_description']
+            sel = Selector(text=dd)
+            item['date_description'] = " ".join(sel.xpath("//text()").getall())
 
         credit_line = None
         image_url = None
