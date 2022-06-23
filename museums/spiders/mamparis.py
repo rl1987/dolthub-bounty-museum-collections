@@ -29,11 +29,8 @@ class MamparisSpider(scrapy.Spider):
 
         for media in medias:
             url_template = media.get("url_template")
-            max_width = media.get("max_width")
 
-            if type(max_width) == float:
-                max_width = int(max_width)
-
+            max_width = 1000 # XXX: is this right?
             file_name = media.get("file_name")
 
             url = url_template.replace("{size}", str(max_width)).replace("{file_name}", file_name)
