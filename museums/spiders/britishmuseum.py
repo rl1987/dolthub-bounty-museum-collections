@@ -19,7 +19,8 @@ class BritishmuseumSpider(scrapy.Spider):
         json_dict = json.loads(response.text)
  
         hits = json_dict.get("hits", dict()).get("hits", [])
-
+    
+        # XXX: this can throw off the scraping job on the first API error
         if len(hits) == 0:
             return
 
