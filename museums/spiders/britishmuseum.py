@@ -18,9 +18,12 @@ class BritishmuseumSpider(scrapy.Spider):
     def parse_search_api_response(self, response):
         json_dict = json.loads(response.text)
  
+        if json_dict.get("error") is not None:
+            yield scrapy.Request(response.url, callback=self.parse_search_api_response, 
+                    meta={'dont_cache': True}, dont_filter=True)
+
         hits = json_dict.get("hits", dict()).get("hits", [])
     
-        # XXX: this can throw off the scraping job on the first API error
         if len(hits) == 0:
             return
 
@@ -99,6 +102,9 @@ class BritishmuseumSpider(scrapy.Spider):
         item['description'] = " ".join(description_parts)
 
         item['current_location'] = xtemplate_full_json_dict.get("Location")
+        if item.get('current_location') is not None and "<span" in item.get('current_location'):
+            sel = Selector(text=item.get('current_location'))
+            item['current_location'] = ''.join(sel.xpath("//text()").getall())
         
         dimensions = []
 
