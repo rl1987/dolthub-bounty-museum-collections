@@ -26,7 +26,7 @@ class VictoriaSpider(scrapy.Spider):
     def parse_object_page(self, response):
         item = ObjectItem()
 
-        item['object_number'] = response.xpath('//input[@name="documentId"]/@value').get()
+        item['object_number'] = response.url.replace("https://collections.museumsvictoria.com.au/", "")
         item['institution_name'] = 'Museums Victoria'
         item['institution_city'] = 'Melbourne'
         item['institution_state'] = 'Victoria'
