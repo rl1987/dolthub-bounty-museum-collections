@@ -97,6 +97,8 @@ def main():
             "source_2": "https://api.wellcomecollection.org/catalogue/v2/works/" + json_dict.get("id")
         }
 
+        csv_writer.writerow(out_row)
+
     in_f.close()
     out_f.close()
 
