@@ -7,7 +7,7 @@ from museums.items import ObjectItem
 class VictoriaSpider(scrapy.Spider):
     name = 'victoria'
     allowed_domains = ['collections.museumsvictoria.com.au']
-    start_urls = ['https://collections.museumsvictoria.com.au/search?query=&page=1&perpage=100']
+    start_urls = ['https://collections.museumsvictoria.com.au/search?query=&page=1&perpage=100&view=data']
 
     def start_requests(self):
         yield scrapy.Request(self.start_urls[0], callback=self.parse_search_page)
