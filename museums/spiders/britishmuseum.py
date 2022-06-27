@@ -203,3 +203,6 @@ class BritishmuseumSpider(scrapy.Spider):
 
         yield item
 
+# UPDATE `objects` SET `date_description` = REPLACE(`date_description`, '</span>', '') WHERE `date_description` LIKE "%</span>%";
+# UPDATE `objects` SET `date_description` = REPLACE(`date_description`, '<span class="vsuffix">', '') WHERE `date_description` LIKE "%<span%";
+
