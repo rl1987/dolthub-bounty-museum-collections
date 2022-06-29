@@ -3,11 +3,15 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
+import json
+from urllib.parse import urlencode
+
 from museums.settings import TWILIO_ACCOUNT_SID, TWILIO_API_TOKEN, FROM_PHONE_NUMBER, TO_PHONE_NUMBER
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 from scrapy.exceptions import DropItem
+import scrapy
 
 from twilio.rest import Client
 
@@ -194,3 +198,65 @@ class NotificationPipeline:
         message = client.messages.create(body=msg, from_=FROM_PHONE_NUMBER, to=TO_PHONE_NUMBER)
 
         spider.logger.info(message)
+
+class InstitutionGeoEnrichmentPipeline:
+    location_by_name = dict()
+
+    # https://developers.google.com/maps/documentation/geocoding/requests-reverse-geocoding
+    async def reverse_geocode(self, spider, adapter):
+        name = adapter.get('institution_name')
+        latitude = adapter.get('institution_latitude')
+        longitude = adapter.get('institution_longitude')
+    
+        if self.location_by_name.get(name) is None:
+            params = {
+                'latlng': '{},{}'.format(latitude, longitude),
+                'key': 'AIzaSyDc_6DfkpFdeQJX-KK7t_2k26aOdi-4aqU' # FIXME: put the API key in settings
+            }
+
+            url = 'https://maps.googleapis.com/maps/api/geocode/json?' + urlencode(params)
+    
+            request = scrapy.Request(url)
+            response = await spider.crawler.engine.download(request, spider)
+
+            json_dict = json.loads(response.text)
+
+            self.location_by_name[name] = json_dict
+        else:
+            json_dict = self.location_by_name[name]
+
+        results = json_dict.get("results", [])
+        if len(results) > 0:
+            result = results[0]
+
+            for ac in result.get("address_components", []):
+                types = ac.get("types")
+                if "country" in types:
+                    adapter['institution_country'] = ac.get('long_name')
+                elif "locality" in types:
+                    adapter['institution_city'] = ac.get('short_name')
+                elif "administrative_area_level_1" in types:
+                    adapter['institution_state'] = ac.get('short_name')
+
+    async def find_place(self, spider, adapter):
+        name = adapter.get('institution_name')
+
+    async def process_item(self, item, spider):
+        adapter = ItemAdapter(item)
+    
+        city = adapter.get('institution_city')
+        state = adapter.get('institution_state')
+        country = adapter.get('institution_country')
+        latitude = adapter.get('institution_latitude')
+        longitude = adapter.get('institution_longitude')
+        
+        if not None in (city, state, country, latitude, longitude):
+            return item
+
+        if latitude is None and longitude is None:
+            await self.find_place(spider, adapter)
+        elif city is None or state is None or country is None:
+            await self.reverse_geocode(spider, adapter)
+
+        return item
+
