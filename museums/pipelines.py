@@ -291,7 +291,7 @@ class InstitutionGeoEnrichmentPipeline:
         if not None in (city, state, country, latitude, longitude):
             return item
 
-        if latitude is None and longitude is None:
+        if latitude is not None and longitude is not None:
             await self.reverse_geocode(spider, adapter)
         elif city is None or state is None or country is None:
             await self.find_place(spider, adapter)
