@@ -62,6 +62,7 @@ TWILIO_ACCOUNT_SID="AC66f9624c713fb8403dc4a153c3f69615"
 TWILIO_API_TOKEN="de07859809be34d8237013db5381a7d2"
 FROM_PHONE_NUMBER="+19807372044"
 TO_PHONE_NUMBER="+37061021232"
+GOOGLE_API_KEY='AIzaSyDc_6DfkpFdeQJX-KK7t_2k26aOdi-4aqU' 
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html

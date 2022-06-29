@@ -3,10 +3,11 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
+import asyncio
 import json
 from urllib.parse import urlencode
 
-from museums.settings import TWILIO_ACCOUNT_SID, TWILIO_API_TOKEN, FROM_PHONE_NUMBER, TO_PHONE_NUMBER
+from museums.settings import TWILIO_ACCOUNT_SID, TWILIO_API_TOKEN, FROM_PHONE_NUMBER, TO_PHONE_NUMBER, GOOGLE_API_KEY
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
@@ -201,6 +202,7 @@ class NotificationPipeline:
 
 class InstitutionGeoEnrichmentPipeline:
     location_by_name = dict()
+    place_by_name = dict()
 
     # https://developers.google.com/maps/documentation/geocoding/requests-reverse-geocoding
     async def reverse_geocode(self, spider, adapter):
@@ -208,10 +210,13 @@ class InstitutionGeoEnrichmentPipeline:
         latitude = adapter.get('institution_latitude')
         longitude = adapter.get('institution_longitude')
     
+        if latitude is None or longitude is None:
+            return
+
         if self.location_by_name.get(name) is None:
             params = {
                 'latlng': '{},{}'.format(latitude, longitude),
-                'key': 'AIzaSyDc_6DfkpFdeQJX-KK7t_2k26aOdi-4aqU' # FIXME: put the API key in settings
+                'key': GOOGLE_API_KEY
             }
 
             url = 'https://maps.googleapis.com/maps/api/geocode/json?' + urlencode(params)
@@ -237,9 +242,42 @@ class InstitutionGeoEnrichmentPipeline:
                     adapter['institution_city'] = ac.get('short_name')
                 elif "administrative_area_level_1" in types:
                     adapter['institution_state'] = ac.get('short_name')
-
+    
+    # https://developers.google.com/maps/documentation/places/web-service/search-find-place
     async def find_place(self, spider, adapter):
         name = adapter.get('institution_name')
+        if self.place_by_name.get(name) is None:
+            params = {
+                'fields': 'geometry',
+                'key': GOOGLE_API_KEY,
+                'input': name,
+                'inputtype': 'textquery'
+            }
+
+            url = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json?' + urlencode(params)
+            request = scrapy.Request(url)
+
+            response = await spider.crawler.engine.download(request, spider)
+
+            json_dict = json.loads(response.text)
+
+            self.place_by_name[name] = json_dict
+        else:
+            json_dict = self.place_by_name[name]
+    
+        results = json_dict.get("candidates", [])
+        if len(results) == 0:
+            raise DropItem("Cannot find {} on Google Maps API - dropping".format(name))
+
+        result = results[0]
+
+        geometry = result.get("geometry", dict())
+        location = geometry.get("location", dict())
+
+        adapter['institution_latitude'] = location.get("lat")
+        adapter['institution_longitude'] = location.get("lng")
+
+        await self.reverse_geocode(spider, adapter)
 
     async def process_item(self, item, spider):
         adapter = ItemAdapter(item)
@@ -254,9 +292,9 @@ class InstitutionGeoEnrichmentPipeline:
             return item
 
         if latitude is None and longitude is None:
-            await self.find_place(spider, adapter)
-        elif city is None or state is None or country is None:
             await self.reverse_geocode(spider, adapter)
+        elif city is None or state is None or country is None:
+            await self.find_place(spider, adapter)
 
         return item
 
