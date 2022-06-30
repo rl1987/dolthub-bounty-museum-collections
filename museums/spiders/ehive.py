@@ -13,7 +13,7 @@ class EhiveSpider(scrapy.Spider):
         yield scrapy.Request(self.start_urls[0], callback=self.parse_object_list)
 
     def parse_object_list(self, response):
-        for object_link in response.xpath('//a[./img[@class="eh-image"]]/@href').getall():
+        for object_link in response.xpath('//p[@class="title"]/a/@href').getall():
             object_url = urljoin(response.url, object_link)
             yield scrapy.Request(object_url, callback=self.parse_object_page)
 
