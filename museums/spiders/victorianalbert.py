@@ -17,7 +17,7 @@ class VictoriaNAlbertSpider(scrapy.Spider):
 
         url = "https://api.vam.ac.uk/v2/objects/search?" + urlencode(params)
 
-        yield scrapy.Request(url, callback=self.parse_clusters)
+        yield scrapy.Request(url, callback=self.parse_search_page)
 
     def recursively_generate_requests(self, clusters, params):
         n_cluster_keys = len(clusters)
@@ -61,7 +61,21 @@ class VictoriaNAlbertSpider(scrapy.Spider):
             self.logger.info(request)
 
     def parse_search_page(self, response):
-        pass
+        json_dict = json.loads(response.text)
+        o = urlparse(response.url)
+        old_params = dict(parse_qsl(o.query))
+
+        records = json_dict.get("records", [])
+        
+
+        if len(records) < int(old_params.get('page_size')):
+            return
+
+        new_params = dict(old_params)
+        new_params['page'] = int(new_params['page']) + 1
+        
+        url = "https://api.vam.ac.uk/v2/objects/search?" + urlencode(new_params)
+        yield scrapy.Request(url, callback=self.parse_search_page)
 
     def parse_object_page(self, response):
         pass
