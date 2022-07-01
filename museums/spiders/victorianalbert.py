@@ -19,7 +19,7 @@ class VictoriaNAlbertSpider(scrapy.Spider):
 
         url = "https://api.vam.ac.uk/v2/objects/search?" + urlencode(params)
 
-        yield scrapy.Request(url, callback=self.parse_search_page)
+        yield scrapy.Request(url, callback=self.parse_clusters)
 
     def recursively_generate_requests(self, clusters, params):
         n_cluster_keys = len(clusters)
