@@ -16,6 +16,7 @@ class SeamusemSpider(scrapy.Spider):
 
     def parse_search_page(self, response):
         for object_link in response.xpath('//a[starts-with(@href, "/objects/")]/@href').getall():
+            object_link = object_link.split(";")[0]
             object_url = urljoin(response.url, object_link)
             yield scrapy.Request(object_url, callback=self.parse_object_page)
 
