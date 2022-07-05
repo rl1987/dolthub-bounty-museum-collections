@@ -49,4 +49,8 @@ class SeamusemSpider(scrapy.Spider):
             item['image_url'] = urljoin(response.url, item['image_url'])
         item['source_1'] = response.url
 
-        yield item
+        if item.get('title') is None and item.get('object_number') is None:
+            yield scrapy.Request(response.url, callback=self.parse_object_page, 
+                    meta={'dont_cache': True}, dont_filter=True)
+        else:
+            yield item
