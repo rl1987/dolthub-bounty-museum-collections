@@ -72,6 +72,10 @@ ITEM_PIPELINES = {
     'museums.pipelines.NotificationPipeline': 300
 }
 
+LOG_ENABLED=True
+LOG_FILE_APPEND=True
+LOG_FILE="scrapy.log"
+
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
 #AUTOTHROTTLE_ENABLED = True
