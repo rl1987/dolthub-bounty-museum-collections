@@ -1,7 +1,9 @@
 import scrapy
 
 import string
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urljoin
+
+PER_PAGE = 100
 
 class AucklandSpider(scrapy.Spider):
     name = 'auckland'
@@ -25,7 +27,8 @@ class AucklandSpider(scrapy.Spider):
                     params = {
                         'c': c,
                         'dept': d,
-                        'k': letter
+                        'k': letter,
+                        'pp': PER_PAGE
                     }
 
                     url = search_url + "?" + urlencode(params)
@@ -33,4 +36,18 @@ class AucklandSpider(scrapy.Spider):
                     yield scrapy.Request(url, callback=self.parse_search_page)
 
     def parse_search_page(self, response):
+        object_links = response.xpath('//a[.//figure[contains(@class, "search-results--thumbnail")]]/@href').getall()
+
+        for object_link in object_links:
+            object_link = object_link.split("?")[0]
+            object_url = urljoin(response.url, object_link)
+            yield scrapy.Request(object_url, callback=self.parse_object_page)
+
+        next_page_link = response.xpath('//div[contains(@class, "next-results")]/a/@href').get()
+        if next_page_link is not None:
+            next_page_url = urljoin(response.url, next_page_link)
+            yield scrapy.Request(next_page_url, callback=self.parse_search_page)
+
+    def parse_object_page(self, response):
         pass
+
