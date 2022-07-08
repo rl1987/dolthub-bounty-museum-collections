@@ -16,7 +16,7 @@ resource "digitalocean_droplet" "server" {
   name      = "dhdb-museum-collections"
   region    = "sfo3"
   size      = "s-8vcpu-16gb"
-  ssh_keys  = ["50:ba:8f:a6:1a:e5:82:f8:57:5b:a0:c5:6e:00:f6:99"]
+  ssh_keys  = ["a0:39:2b:6a:4b:25:55:64:8a:d6:4c:80:05:69:3c:1b"]
   user_data = file("provision.sh")
 
   connection {
@@ -24,7 +24,7 @@ resource "digitalocean_droplet" "server" {
     user        = "root"
     type        = "ssh"
     timeout     = "2m"
-    private_key = file("~/.ssh/id_rsa")
+    private_key = file("~/.ssh/id_ed25519")
   }
 
   provisioner "file" {
