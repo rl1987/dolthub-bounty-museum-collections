@@ -46,7 +46,7 @@ class BostonFineArtsSpider(scrapy.Spider):
         item['maker_full_name'] = "|".join(response.xpath('//div[contains(@class, "peopleField")]/a/text()').getall())
         item['accession_number'] = response.xpath('//div[contains(@class, "invnolineField")]/span[@class="detailFieldValue"]/text()').get()
         item['credit_line'] = response.xpath('//div[contains(@class, "creditlineField")]/span[@class="detailFieldValue"]/text()').get("").strip()
-        item['image_url'] = response.xpath('//meta[@name="og:image"]/@content').get()
+        item['image_url'] = response.xpath('//meta[@name="og:image"]/@content').get("").split(";")[0]
         item['source_1'] = response.url.split(";")[0]
 
         try:
