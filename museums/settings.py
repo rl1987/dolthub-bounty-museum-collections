@@ -98,3 +98,5 @@ HTTPCACHE_IGNORE_HTTP_CODES = []
 HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.DbmCacheStorage'
 HTTPCACHE_GZIP = True
 HTTPCACHE_ALWAYS_STORE = True
+
+RETRY_TIMES = 8
