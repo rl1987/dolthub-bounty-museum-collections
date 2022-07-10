@@ -113,7 +113,37 @@ class ArtsAndCultureSpider(scrapy.Spider):
         yield scrapy.Request(url, callback=self.parse_asset_search_api_response)
 
     def parse_asset_search_api_response(self, response):
-        pass
+        json_str = response.text
+        json_str = json_str[5:]
+
+        json_arr = json.loads(json_str)
+        
+        json_str = response.text
+        json_str = json_str[5:]
+
+        json_arr = json.loads(json_str)
+        
+        try:
+            pt = json_arr[0][0][-1]
+        except:
+            pt = None
+
+        json_arr = json_arr[0][0][2]
+
+        for asset_arr in json_arr:
+            url = asset_arr[4]
+            yield response.follow(url, callback=self.parse_asset_html_page)
+
+        if pt.startswith("AssetsQuery"):
+            return
+
+        o = urlparse(response.url)
+        old_params = dict(parse_qsl(o.query))
+        params = dict(old_params)
+        params['pt'] = pt
+
+        url = 'https://artsandculture.google.com/api/assets/images?' + urlencode(params)
+        yield scrapy.Request(url, callback=self.parse_asset_search_api_response)
 
     def parse_asset_html_page(self, response):
         pass
