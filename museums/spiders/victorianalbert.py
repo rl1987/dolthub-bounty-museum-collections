@@ -52,6 +52,13 @@ class VictoriaNAlbertSpider(scrapy.Spider):
         for cname, cdict in json_dict.get("clusters").items():
             clusters["id_" + cname] = list(map(lambda term: term.get("id"), cdict.get("terms")))
 
+        del clusters['id_person']
+        del clusters['id_organisation']
+        del clusters['id_collection']
+        del clusters['id_material']
+        del clusters['id_style']
+        del clusters['id_technique']
+
         self.logger.debug(clusters)
  
         params = {
@@ -61,6 +68,7 @@ class VictoriaNAlbertSpider(scrapy.Spider):
 
         for request in self.recursively_generate_requests(clusters, params):
             self.logger.info(request)
+            yield request
 
     def parse_search_page(self, response):
         json_dict = json.loads(response.text)
