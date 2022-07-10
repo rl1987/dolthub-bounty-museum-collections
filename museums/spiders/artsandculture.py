@@ -31,7 +31,17 @@ class ArtsAndCultureSpider(scrapy.Spider):
         pass
 
     def parse_asset_search_html_page(self, response):
-        pass
+        js = response.xpath('//script[contains(text(), "INIT_data")]/text()').get()
+        parsed = js2xml.parse(js)
+        asset_links = parsed.xpath('//string[starts-with(text(), "/asset")]/text()')
+        
+        for al in asset_links:
+            yield response.follow(al, callback=self.parse_asset_html_page)
+
+        search_links = parsed.xpath('//string[starts-with(text(), "/search/asset")]/text()')
+        
+        for sl in search_links:
+            yield response.follow(sl, callback=self.parse_asset_search_html_page)
 
     def parse_asset_search_api_response(self, response):
         pass
