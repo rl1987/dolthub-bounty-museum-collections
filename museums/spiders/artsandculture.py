@@ -62,6 +62,9 @@ class ArtsAndCultureSpider(scrapy.Spider):
 
         json_arr = json_arr[0][0][2]
 
+        if pt.startswith("AssetsQuery"):
+            return
+
         for partner_arr in json_arr:
             url = partner_arr[4]
             yield self.partner_asset_search_request_from_link(url)
@@ -88,6 +91,9 @@ class ArtsAndCultureSpider(scrapy.Spider):
         try:
             pt = parsed.xpath('//right/array/array/string[last()]/text()')[0]
         except:
+            return
+
+        if pt.startswith("AssetsQuery"):
             return
 
         params = {
