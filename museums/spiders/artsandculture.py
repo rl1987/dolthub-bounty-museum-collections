@@ -5,6 +5,8 @@ import js2xml
 import json
 from urllib.parse import urlparse, urlencode, parse_qsl
 
+from museums.items import ObjectItem
+
 class ArtsAndCultureSpider(scrapy.Spider):
     name = 'artsandculture'
     allowed_domains = ['artsandculture.google.com']
@@ -146,5 +148,46 @@ class ArtsAndCultureSpider(scrapy.Spider):
         yield scrapy.Request(url, callback=self.parse_asset_search_api_response)
 
     def parse_asset_html_page(self, response):
-        pass
+        item = ObjectItem()
+
+        json_str = response.xpath('//script[@type="application/ld+json"]/text()').get()
+        json_arr = json.loads(json_str)
+
+        for json_dict in json_arr:
+            if type(json_dict) != dict:
+                continue
+
+            if json_dict.get("@type") == "CreativeWork":
+                item['maker_full_name'] = json_dict.get("author")
+                item['description'] = json_dict.get("description")
+                item['image_url'] = json_dict.get("image", dict()).get("contentUrl")
+                break
+        
+        item['object_number'] = response.xpath('//li[./span[text()="Number:"]]/text()').get("").strip()
+        if item['object_number'] == '':
+            item['object_number'] = response.xpath('//div[@jsmodel="lLrbSb"]/@data-prid').get()
+        item['institution_name'] = response.xpath('//h3[@class="To7WBf"]/text()').get()
+
+        institution_city_country = response.xpath('//span[@class="WrfKPd"]/text()').get()
+        if institution_city_country is not None:
+            item['institution_city'] = institution_city_country.split(", ")[0]
+            item['institution_country'] = institution_city_country.split(", ")[-1]
+        
+        item['category'] = response.xpath('//li[./span[text()="Type:"]]/a/text()').get()
+        item['title'] = response.xpath('//li[./span[text()="Title:"]]/text()').get("").strip()
+        item['dimensions'] = response.xpath('//li[./span[text()="Physical Dimensions:"]]/text()').get("").strip()
+        item['inscription'] = response.xpath('//li[./span[text()="Inscription:"]]/text()').get("").strip()
+        item['provenance'] = response.xpath('//li[./span[text()="Provenance:"]]/text()').get("").strip()
+        item['materials'] = " ".join(response.xpath('//li[./span[text()="Medium:"]]/*/text()').getall()).replace("Medium: ", "")
+        item['technique'] = response.xpath('//li[./span[text()="Technique:"]]/text()').get("").strip()
+        item['from_location'] = response.xpath('//li[./span[text()="Location Created:"]]/text()').get("").strip()
+        if item['from_location'] == "":
+            item['from_location'] = response.xpath('//li[./span[text()="Location:"]]/text()').get("").strip()
+
+        item['date_description'] = response.xpath('//li[./span[text()="Date:"]]/text()').get("").strip()
+        
+        item['source_1'] = response.url
+        item['source_2'] = response.xpath('//li[./span[text()="External Link:"]]/a/@href').get()
+
+        yield item
 
