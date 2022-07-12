@@ -18,6 +18,7 @@ class SeamusemSpider(scrapy.Spider):
         for object_link in response.xpath('//a[starts-with(@href, "/objects/")]/@href').getall():
             object_link = object_link.split(";")[0]
             object_url = urljoin(response.url, object_link)
+            object_url = object_url.split("?")[0]
             yield scrapy.Request(object_url, callback=self.parse_object_page)
 
         next_page_link = response.xpath('//a[contains(@class, "next-page-link")]/@href').get()
