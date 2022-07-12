@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 
 from museums.items import ObjectItem
 
-class SeamusemSpider(scrapy.Spider):
+class SeamuseumSpider(scrapy.Spider):
     name = 'seamusem'
     allowed_domains = ['sea.museum']
     start_urls = ['http://collections.sea.museum/search/*/objects?filter=MediaExistence%3Atrue#filters',
