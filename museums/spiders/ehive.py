@@ -4,6 +4,8 @@ from urllib.parse import urljoin
 
 from museums.items import ObjectItem
 
+THRESHOLD = 25
+
 class EhiveSpider(scrapy.Spider):
     name = 'ehive'
     allowed_domains = ['ehive.com']
@@ -27,11 +29,21 @@ class EhiveSpider(scrapy.Spider):
         institution_latitude = response.xpath('//span[@id="latitude"]/text()').get()
         institution_longitude = response.xpath('//span[@id="longitude"]/text()').get()
 
+        if not "Museum" in institution_name:
+            if "Archive" in institution_name or "School" in institution_name or "Park" in institution_name or "Cathedral" in institution_name:
+                return
+
         meta = {
             'institution_name': institution_name,
             'institution_latitude': institution_latitude,
             'institution_longitude': institution_longitude
         }
+
+        view_all_text = response.xpath('//h5[text()="Entire collection - "]/a/text()').get()
+        n = view_all_text.replace("View all (", "").replace(")", "")
+        n = int(n)
+        if n < THRESHOLD:
+            return
 
         # TODO: come up with a way to remove data from what appears to be test profiles
         view_all_link = response.xpath('//h5[text()="Entire collection - "]/a/@href').get()
