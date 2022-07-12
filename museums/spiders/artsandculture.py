@@ -64,7 +64,7 @@ class ArtsAndCultureSpider(scrapy.Spider):
 
         json_arr = json_arr[0][0][2]
 
-        if pt.startswith("AssetsQuery"):
+        if not type(pt) == str or pt.startswith("AssetsQuery"):
             return
 
         for partner_arr in json_arr:
@@ -95,7 +95,7 @@ class ArtsAndCultureSpider(scrapy.Spider):
         except:
             return
 
-        if pt.startswith("AssetsQuery"):
+        if not type(pt) == str or pt.startswith("AssetsQuery"):
             return
 
         params = {
