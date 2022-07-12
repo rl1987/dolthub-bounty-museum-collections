@@ -3,11 +3,14 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+import scrapy
 from scrapy import signals
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
 
+import logging
+import time
 
 class MuseumsSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
@@ -55,49 +58,40 @@ class MuseumsSpiderMiddleware:
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
 
+# Based on:
+# https://stackoverflow.com/questions/43630434/how-to-handle-a-429-too-many-requests-response-in-scrapy
+from scrapy.downloadermiddlewares.retry import RetryMiddleware
+from scrapy.utils.response import response_status_message
+from scrapy.http import FormRequest
 
-class MuseumsDownloaderMiddleware:
-    # Not all methods need to be defined. If a method is not defined,
-    # scrapy acts as if the downloader middleware does not modify the
-    # passed objects.
+import time
+from urllib.parse import urlparse, parse_qsl
 
+class RateLimitDownloaderMiddleware(RetryMiddleware):
+    def __init__(self, crawler):
+        super(RateLimitDownloaderMiddleware, self).__init__(crawler.settings)
+        self.crawler = crawler
+        
     @classmethod
     def from_crawler(cls, crawler):
-        # This method is used by Scrapy to create your spiders.
-        s = cls()
-        crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
-        return s
-
-    def process_request(self, request, spider):
-        # Called for each request that goes through the downloader
-        # middleware.
-
-        # Must either:
-        # - return None: continue processing this request
-        # - or return a Response object
-        # - or return a Request object
-        # - or raise IgnoreRequest: process_exception() methods of
-        #   installed downloader middleware will be called
-        return None
+        return cls(crawler)
 
     def process_response(self, request, response, spider):
-        # Called with the response returned from the downloader.
+        if request.meta.get('dont_retry', False):
+            return response
+        elif response.status == 429:
+            o = urlparse(response.url)
+            if o.netloc == 'www.google.com':
+                params = dict(parse_qsl(o.query))
+                request = scrapy.Request(params['continue'], callback=request.callback)
 
-        # Must either;
-        # - return a Response object
-        # - return a Request object
-        # - or raise IgnoreRequest
-        return response
+            #self.crawler.engine.pause()
+            time.sleep(5)
+            #self.crawler.engine.unpause()
+            reason = response_status_message(response.status)
+            return self._retry(request, reason, spider) or response
+        elif response.status in self.retry_http_codes:
+            reason = response_status_message(response.status)
+            return self._retry(request, reason, spider) or response
+        return response 
 
-    def process_exception(self, request, exception, spider):
-        # Called when a download handler or a process_request()
-        # (from other downloader middleware) raises an exception.
-
-        # Must either:
-        # - return None: continue processing this exception
-        # - return a Response object: stops process_exception() chain
-        # - return a Request object: stops process_exception() chain
-        pass
-
-    def spider_opened(self, spider):
-        spider.logger.info('Spider opened: %s' % spider.name)

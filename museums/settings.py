@@ -48,9 +48,10 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 32
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'museums.middlewares.MuseumsDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
+    'museums.middlewares.RateLimitDownloaderMiddleware': 543,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
