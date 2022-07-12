@@ -46,11 +46,16 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 32
 #    'museums.middlewares.MuseumsSpiderMiddleware': 543,
 #}
 
+BRIGHT_DATA_ENABLED = True
+BRIGHT_DATA_ZONE_USERNAME = "lum-customer-c_cecd546c-zone-zone_dc_artsandculture"
+BRIGHT_DATA_ZONE_PASSWORD = "kd9ni4qgyyuv"
+
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
-    'museums.middlewares.RateLimitDownloaderMiddleware': 543,
+    'museums.middlewares.BrightDataDownloaderMiddleware': 500,
+    #'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
+    #'museums.middlewares.RateLimitDownloaderMiddleware': 543,
 }
 
 # Enable or disable extensions
