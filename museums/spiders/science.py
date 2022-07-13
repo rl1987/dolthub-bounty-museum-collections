@@ -32,7 +32,12 @@ class ScienceSpider(scrapy.Spider):
             yield scrapy.Request(url, callback=self.parse_search_page)
 
     def parse_search_page(self, response):
-        pass
+        for object_url in response.xpath('//div[@class="searchresults__column"]/a/@href').getall():
+            yield scrapy.Request(object_url, callback=self.parse_object_page)
+
+        next_page_url = response.xpath('//li[@class="pagination-next"]/a/@href').get()
+        if next_page_url is not None:
+            yield scrapy.Request(next_page_url, callback=self.parse_search_page)
 
     def parse_object_page(self, response):
         pass
