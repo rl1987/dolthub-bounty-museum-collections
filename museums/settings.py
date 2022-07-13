@@ -46,14 +46,14 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 32
 #    'museums.middlewares.MuseumsSpiderMiddleware': 543,
 #}
 
-BRIGHT_DATA_ENABLED = True
-BRIGHT_DATA_ZONE_USERNAME = "lum-customer-c_cecd546c-zone-zone_dc_artsandculture"
-BRIGHT_DATA_ZONE_PASSWORD = "kd9ni4qgyyuv"
+BRIGHT_DATA_ENABLED = False
+BRIGHT_DATA_ZONE_USERNAME = "lum-customer-c_cecd546c-zone-zone_dc_iwm"
+BRIGHT_DATA_ZONE_PASSWORD = "s2bdv3ffg54u"
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'museums.middlewares.BrightDataDownloaderMiddleware': 500,
+    #'museums.middlewares.BrightDataDownloaderMiddleware': 500,
     #'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
     #'museums.middlewares.RateLimitDownloaderMiddleware': 543,
 }
@@ -74,7 +74,7 @@ GOOGLE_API_KEY='AIzaSyDc_6DfkpFdeQJX-KK7t_2k26aOdi-4aqU'
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'museums.pipelines.ConstraintEnforcementPipeline': 250,
-    'museums.pipelines.InstitutionGeoEnrichmentPipeline': 275,
+    #'museums.pipelines.InstitutionGeoEnrichmentPipeline': 275,
     'museums.pipelines.NotificationPipeline': 300
 }
 
