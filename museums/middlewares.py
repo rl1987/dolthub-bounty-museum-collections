@@ -108,7 +108,7 @@ class BrightDataDownloaderMiddleware:
 
     def process_request(self, request, spider):
         if not BRIGHT_DATA_ENABLED:
-            return request
+            return
 
         request.meta['proxy'] = 'http://zproxy.lum-superproxy.io:22225'
         
