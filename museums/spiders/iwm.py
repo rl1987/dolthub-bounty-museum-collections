@@ -26,7 +26,7 @@ class IwmSpider(scrapy.Spider):
     def parse_object_page(self, response):
         item = ObjectItem()
         
-        item['object_number'] = response.url.split("/")[-1]
+        item['object_number'] = response.xpath('//dt[text()="Catalogue number"]/following-sibling::dd/text()').get()
         item['institution_name'] = 'Imperial War Museum'
         item['institution_city'] = 'London'
         item['institution_state'] = 'England'
@@ -41,7 +41,6 @@ class IwmSpider(scrapy.Spider):
         item['from_location'] = response.xpath('//dt[text()="Place made"]/following-sibling::dd/a/text()').get()
         item['date_description'] = response.xpath('//dt[text()="Production date"]/following-sibling::dd/text()').get()
         item['maker_full_name'] = "|".join(response.xpath('//dt[text()="Creator"]/following-sibling::dd/a/text()').getall())
-        item['accession_number'] = response.xpath('//dt[text()="Catalogue number"]/following-sibling::dd/text()').get()
         item['image_url'] = response.xpath('//meta[@property="og:image"]/@content').get()
         item['source_1'] = response.url
 
