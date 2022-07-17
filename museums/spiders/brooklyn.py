@@ -38,7 +38,7 @@ class BrooklynSpider(scrapy.Spider):
         item['from_location'] = response.xpath('//li[contains(text(),"Place Made:")]/a/text()').get()
         item['culture'] = response.xpath('//div[@class="tombstone-data-row" and ./strong[text()="CULTURE"]]//a/text()').get()
         item['date_description'] = " ".join(response.xpath('//div[@class="tombstone-data-row" and ./strong[text()="DATES"]]/text()').getall()).strip()
-        item['maker_full_name'] = "|".join(response.xpath('//div[@class="tombstone-data-row" and ./strong[text()="ARTIST"]]/a/text()').getall())
+        item['maker_full_name'] = "|".join(response.xpath('//div[@class="tombstone-data-row" and ./strong[text()="ARTIST" or text()="MANUFACTURER"]]/a/text()').getall())
         item['accession_number'] = " ".join(response.xpath('//div[@class="tombstone-data-row" and ./strong[text()="ACCESSION NUMBER"]]/text()').getall()).strip()
         item['credit_line'] = " ".join(response.xpath('//div[@class="tombstone-data-row" and ./strong[text()="CREDIT LINE"]]/text()').getall()).strip()
         item['image_url'] = response.xpath('//div[contains(@class, "highlighted-image")]/img/@src').get()
