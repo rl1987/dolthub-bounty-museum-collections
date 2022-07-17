@@ -29,7 +29,7 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 32
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
@@ -47,8 +47,8 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 32
 #}
 
 BRIGHT_DATA_ENABLED = False
-BRIGHT_DATA_ZONE_USERNAME = "lum-customer-c_cecd546c-zone-zone_dc_iwm"
-BRIGHT_DATA_ZONE_PASSWORD = "s2bdv3ffg54u"
+BRIGHT_DATA_ZONE_USERNAME = "lum-customer-c_cecd546c-zone-zone_unlocker_bostonmfa"
+BRIGHT_DATA_ZONE_PASSWORD = "lhob01y5af37"
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
