@@ -16,7 +16,7 @@ class ScienceSpider(scrapy.Spider):
     def parse_object_page(self, response):
         item = ObjectItem()
 
-        item['object_number'] = response.xpath('//dl[contains(@class, "details-Object-Number") or contains(@class, "details-Identifier")]/dd/text()').get("").strip()
+        item['object_number'] = response.url.split("/")[-1].replace("co", "")
         item['institution_name'] = "Science Museum Group"
         item['institution_country'] = "United Kingdom"
         item['department'] = response.xpath('//dl[contains(@class, "details-Collection")]/dd/a/text()').get("").strip()
@@ -36,6 +36,7 @@ class ScienceSpider(scrapy.Spider):
         makers = "|".join(makers)
         item['maker_full_name'] = makers
         item['credit_line'] = response.xpath('//dl[contains(@class, "details-credit")]/dd/text()').get("").strip()
+        item['accession_number'] = response.xpath('//dl[contains(@class, "details-Object-Number") or contains(@class, "details-Identifier")]/dd/text()').get("").strip()
 
         item['image_url'] = response.xpath('//div[@class="carousel"]/img/@data-flickity-lazyload').get()
         item['source_1'] = response.url
