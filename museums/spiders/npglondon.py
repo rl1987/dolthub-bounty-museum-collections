@@ -7,7 +7,7 @@ from museums.items import ObjectItem
 class NpglondonSpider(scrapy.Spider):
     name = 'npglondon'
     allowed_domains = ['www.npg.org.uk']
-    start_urls = [ "https://www.npg.org.uk/collections/search/arta-z/?index=" + letter for letter in string.ascii_lowercase ]
+    start_urls = [ "https://www.npg.org.uk/collections/search/arta-z/?index=" + letter for letter in string.ascii_lowercase ] + [ 'https://www.npg.org.uk/collections/search/sita-z/?index=' + letter for letter in string.ascii_lowercase ]
 
     def start_requests(self):
         for url in self.start_urls:
