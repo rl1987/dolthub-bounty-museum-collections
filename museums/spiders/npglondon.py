@@ -34,10 +34,6 @@ class NpglondonSpider(scrapy.Spider):
         item['title'] = response.xpath('//title/text()').get().split("; ")[-1].replace(" - National Portrait Gallery", "")
         item['description'] = response.xpath('//meta[@property="og:description"]/@content').get()
         item['maker_full_name'] = "|".join(response.xpath('//ul[@id="artist-list"]//a/text()').getall())
-        maker_roles = response.xpath('//ul[@id="artist-list"]/li/text()').getall()
-        maker_roles = list(map(lambda mr: mr.split(", ")[-1].split(". ")[0], maker_roles))
-        maker_roles = "|".join(maker_roles)
-        item['maker_role'] = maker_roles
 
         lines = response.xpath('//div[@class="contentColumn last"]/p[last()]/text()').getall()
         item['technique'] = ", ".join(lines[1].split(", ")[:-1])
