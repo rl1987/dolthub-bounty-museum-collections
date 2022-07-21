@@ -24,7 +24,7 @@ class NpglondonSpider(scrapy.Spider):
     def parse_portrait_page(self, response):
         item = ObjectItem()
 
-        item['object_number'] = response.xpath('//title/text()').get().split(";")[0]
+        item['object_number'] = response.xpath('//input[@name="identifier"]/@value').get()
         item['institution_name'] = "National Portrait Gallery"
         item['institution_city'] = "London"
         item['institution_state'] = 'England'
@@ -49,6 +49,8 @@ class NpglondonSpider(scrapy.Spider):
             item['acquired_from'] = lines[3].split(", ")[0]
         except:
             pass
+
+        item['accession_number'] = response.xpath('//title/text()').get().split(";")[0]
 
         item['image_url'] = response.xpath('//img[@class="zoom-fallback"]/@src').get()
         item['source_1'] = response.url
