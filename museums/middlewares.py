@@ -58,43 +58,6 @@ class MuseumsSpiderMiddleware:
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
 
-# Based on:
-# https://stackoverflow.com/questions/43630434/how-to-handle-a-429-too-many-requests-response-in-scrapy
-from scrapy.downloadermiddlewares.retry import RetryMiddleware
-from scrapy.utils.response import response_status_message
-from scrapy.http import FormRequest
-
-import time
-from urllib.parse import urlparse, parse_qsl
-
-class RateLimitDownloaderMiddleware(RetryMiddleware):
-    def __init__(self, crawler):
-        super(RateLimitDownloaderMiddleware, self).__init__(crawler.settings)
-        self.crawler = crawler
-        
-    @classmethod
-    def from_crawler(cls, crawler):
-        return cls(crawler)
-
-    def process_response(self, request, response, spider):
-        if request.meta.get('dont_retry', False):
-            return response
-        elif response.status == 429:
-            o = urlparse(response.url)
-            if o.netloc == 'www.google.com':
-                params = dict(parse_qsl(o.query))
-                request = scrapy.Request(params['continue'], callback=request.callback)
-
-            #self.crawler.engine.pause()
-            time.sleep(5)
-            #self.crawler.engine.unpause()
-            reason = response_status_message(response.status)
-            return self._retry(request, reason, spider) or response
-        elif response.status in self.retry_http_codes:
-            reason = response_status_message(response.status)
-            return self._retry(request, reason, spider) or response
-        return response 
-
 from museums.settings import BRIGHT_DATA_ENABLED, BRIGHT_DATA_ZONE_USERNAME, BRIGHT_DATA_ZONE_PASSWORD
 
 from w3lib.http import basic_auth_header

@@ -54,8 +54,6 @@ BRIGHT_DATA_ZONE_PASSWORD = "lhob01y5af37"
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     #'museums.middlewares.BrightDataDownloaderMiddleware': 500,
-    #'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
-    #'museums.middlewares.RateLimitDownloaderMiddleware': 543,
 }
 
 # Enable or disable extensions
@@ -74,8 +72,8 @@ GOOGLE_API_KEY='AIzaSyDc_6DfkpFdeQJX-KK7t_2k26aOdi-4aqU'
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'museums.pipelines.ConstraintEnforcementPipeline': 250,
-    #'museums.pipelines.InstitutionGeoEnrichmentPipeline': 275,
-    'museums.pipelines.NotificationPipeline': 300
+    'museums.pipelines.InstitutionGeoEnrichmentPipeline': 275,
+    #'museums.pipelines.NotificationPipeline': 300
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
