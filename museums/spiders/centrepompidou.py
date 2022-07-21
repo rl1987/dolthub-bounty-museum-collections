@@ -48,8 +48,13 @@ class CentrepompidouSpider(scrapy.Spider):
         html_str = json_dict.get("resultsList")
 
         sel = Selector(text=html_str)
+    
+        links = sel.xpath('//a/@href').getall()
 
-        for l in sel.xpath('//a/@href').getall():
+        if len(links) == 0:
+            return
+
+        for l in links:
             yield response.follow(l, callback=self.parse_object_page)
 
         yield FormRequest(response.url, formdata=form_data, callback=self.parse_search_page, meta={'formdata': form_data})
