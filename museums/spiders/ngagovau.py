@@ -16,7 +16,7 @@ class NgagovauSpider(scrapy.Spider):
             'includeParts': None,
             'searchIn': [],
             'selectedFilters': [],
-            'pageSize': 30,
+            'pageSize': 50,
             'retainSearch': True,
             'keyword': '*',
             'startIndex': 0,
@@ -92,4 +92,18 @@ class NgagovauSpider(scrapy.Spider):
             item['source_2'] = 'https://searchthecollection.nga.gov.au/stcapi/service/stc/node?uniqueId=' + str(item['object_number'])
 
             yield item
+
+        n_total = json_dict.get("payLoad", dict()).get("totalRecordsUpper")
+
+        json_data = response.meta.get("json_data")
+        per_page = json_data.get('pageSize')
+        start_idx = json_data.get('startIndex')
+        
+        if start_idx + per_page < n_total:
+            start_idx += per_page
+            json_data['startIndex'] = start_idx
+            yield JsonRequest(self.start_urls[0], data=json_data, callback=self.parse_search_api_response, meta={"json_data": json_data})
+
+
+
 
