@@ -80,8 +80,13 @@ class NgagovauSpider(scrapy.Spider):
             item['technique'] = "|".join(item_dict.get("techniques", []))
             item['from_location'] = "|".join(item_dict.get("placeOfCreation", []))
             item['date_description'] = item_dict.get("vraDateDisplayText")
-            item['year_start'] = item_dict.get("creEarliestDate", "").split("-")[0]
-            item['year_end'] = item_dict.get("creLatestDate", "").split("-")[0]
+
+            try:
+                item['year_start'] = int(item_dict.get("creEarliestDate", "").split("-")[0])
+                item['year_end'] = int(item_dict.get("creLatestDate", "").split("-")[0])
+            except:
+                pass
+
             item['maker_full_name'] = "|".join(item_dict.get("creators", []))
             item['accession_year'] = item_dict.get("accessionMeetingDate", "").split("-")[0]
             item['accession_number'] = item_dict.get("vraIdentifier")
