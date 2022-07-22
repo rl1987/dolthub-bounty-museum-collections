@@ -51,8 +51,26 @@ def main():
         json_arr = json_arr[0][0][2]
 
         for partner_arr in json_arr:
-            # TODO: convert data to CSV row
-            pass
+            row = dict()
+            
+            row['name'] = partner_arr[1]
+            row['slug'] = partner_arr[4].replace("/partner/", "")
+
+            try:
+                location = partner_arr[14][7]
+                loc_components = location.split(", ")
+                row['city'] = loc_components[1]
+                row['country'] = partner_arr[2]
+                if row['country'] == "United States":
+                    row['state'] = loc_components[-2]
+            except:
+                print(location)
+            
+            row['latitude'] = partner_arr[14][5]
+            row['longitude'] = partner_arr[14][6]
+    
+            pprint(row)
+            csv_writer.writerow(row)
         
         if type(pt) != str:
             break
