@@ -73,15 +73,11 @@ class NgagovauSpider(scrapy.Spider):
             item['department'] = item_dict.get('deparment')
             item['category'] = "|".join(item_dict.get("objectType", []))
             item['title'] = item_dict.get("woaCmTitle")
-            # TODO: query narratives API for the description
-            # XXX: current_location
             item['dimensions'] = item_dict.get("measurementDetailsJson")
-            # XXX: inscription
             item['provenance'] = item_dict.get("provenance")
             item['materials'] = "|".join(item_dict.get("materials", []))
             item['technique'] = "|".join(item_dict.get("techniques", []))
             item['from_location'] = "|".join(item_dict.get("placeOfCreation", []))
-            # XXX: culture
             item['date_description'] = item_dict.get("vraDateDisplayText")
             item['year_start'] = item_dict.get("creEarliestDate", "").split("-")[0]
             item['year_end'] = item_dict.get("creLatestDate", "").split("-")[0]
