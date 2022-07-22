@@ -1,6 +1,7 @@
 import scrapy
 
 import json
+from urllib.parse import urljoin
 
 from scrapy.http import JsonRequest
 from scrapy.selector import Selector
@@ -87,6 +88,12 @@ class NgagovauSpider(scrapy.Spider):
             item['credit_line'] = item_dict.get("accessionCreditLine")
             item['source_1'] = 'https://searchthecollection.nga.gov.au/object?uniqueId=' + str(item['object_number'])
             item['source_2'] = 'https://searchthecollection.nga.gov.au/stcapi/service/stc/node?uniqueId=' + str(item['object_number'])
+
+            thumbnail_json_str = item_dict.get("defaultThumbnail", "{}")
+            thumbnail_json_dict = json.loads(thumbnail_json_str)
+            preview_url = thumbnail_json_dict.get("imgpreview")
+            if preview_url is not None:
+                item['image_url'] = "https://searchthecollection.nga.gov.au/stcapi/service/ngacd/asset/preview?contentInfo=" + preview_url
 
             url = "https://searchthecollection.nga.gov.au/stcapi/service/ngacd/narratives?uniqueId=" + item['object_number']
             yield scrapy.Request(url, meta={'item': item}, callback=self.parse_narrative_api_response)
