@@ -12,9 +12,12 @@ from museums.items import ObjectItem
 class CentrepompidouSpider(scrapy.Spider):
     name = 'centrepompidou'
     allowed_domains = ['www.centrepompidou.fr']
-    start_urls = ['http://www.centrepompidou.fr/']
+    start_urls = ['https://www.centrepompidou.fr/en/recherche/oeuvres?display=Grid']
 
     def start_requests(self):
+        yield scrapy.Request(self.start_urls[0], callback=self.parse_search_params)
+
+    def parse_search_params(self, response):
         params = {
             'tx__[action]': 'ajaxSearch',
             'tx__[controller]': 'Recherche',
@@ -22,19 +25,22 @@ class CentrepompidouSpider(scrapy.Spider):
             'cHash': '00c2bdba7f2587e76c56cfc79343dc63',
         }
 
-        data = {
-            'resultsType': 'arts',
-            'displayType': 'Grid',
-            'terms': '',
-            'page': '1',
-            'sort': 'default',
-        }
+        for date_creation in response.xpath('//input[@name="dateCreation[]"]/@value').getall():
+            data = {
+                'resultsType': 'arts',
+                'displayType': 'Grid',
+                'terms': '',
+                'page': '1',
+                'sort': 'default',
+                'filtersList[0][type]': 'dateCreation[]',
+                'filtersList[0][value]': date_creation
+            }
 
-        logging.info(data)
+            logging.info(data)
 
-        url = "https://www.centrepompidou.fr/en/recherche?" + urlencode(params)
+            url = "https://www.centrepompidou.fr/en/recherche?" + urlencode(params)
 
-        yield FormRequest(url, formdata=data, callback=self.parse_search_page, meta={'formdata': data})
+            yield FormRequest(url, formdata=data, callback=self.parse_search_page, meta={'formdata': data})
     
     def parse_search_page(self, response):
         form_data = response.meta.get('formdata')
