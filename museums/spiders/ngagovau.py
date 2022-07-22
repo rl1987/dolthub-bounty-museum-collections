@@ -72,6 +72,7 @@ class NgagovauSpider(scrapy.Spider):
             item['institution_latitude'] = -35.287122
             item['institution_longitude'] = 149.1050016
             item['department'] = item_dict.get('deparment')
+            item['inscription'] = item_dict.get('vraInscriptionDisplayText')
             item['category'] = "|".join(item_dict.get("objectType", []))
             item['title'] = item_dict.get("woaCmTitle")
             item['dimensions'] = item_dict.get("measurementDetailsJson")
@@ -88,7 +89,10 @@ class NgagovauSpider(scrapy.Spider):
                 pass
 
             item['maker_full_name'] = "|".join(item_dict.get("creators", []))
-            item['accession_year'] = item_dict.get("accessionMeetingDate", "").split("-")[0]
+            try:
+                item['accession_year'] = int(item_dict.get("accessionMeetingDate", "").split("-")[0])
+            except:
+                pass
             item['accession_number'] = item_dict.get("vraIdentifier")
             item['credit_line'] = item_dict.get("accessionCreditLine")
             item['source_1'] = 'https://searchthecollection.nga.gov.au/object?uniqueId=' + str(item['object_number'])
