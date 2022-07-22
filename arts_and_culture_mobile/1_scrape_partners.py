@@ -66,11 +66,15 @@ def main():
             except:
                 print(location)
             
-            row['latitude'] = partner_arr[14][5]
-            row['longitude'] = partner_arr[14][6]
+            try:
+                row['latitude'] = partner_arr[14][5]
+                row['longitude'] = partner_arr[14][6]
+            except:
+                continue
     
-            pprint(row)
-            csv_writer.writerow(row)
+            if row.get('latitude') is not None and row.get('longitude') is not None:
+                pprint(row)
+                csv_writer.writerow(row)
         
         if type(pt) != str:
             break
