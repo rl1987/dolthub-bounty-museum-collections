@@ -3,6 +3,7 @@ import scrapy
 import json
 
 from scrapy.http import JsonRequest
+from scrapy.selector import Selector
 
 from museums.items import ObjectItem
 
@@ -91,7 +92,8 @@ class NgagovauSpider(scrapy.Spider):
             item['source_1'] = 'https://searchthecollection.nga.gov.au/object?uniqueId=' + str(item['object_number'])
             item['source_2'] = 'https://searchthecollection.nga.gov.au/stcapi/service/stc/node?uniqueId=' + str(item['object_number'])
 
-            yield item
+            url = "https://searchthecollection.nga.gov.au/stcapi/service/ngacd/narratives?uniqueId=" + item['object_number']
+            yield scrapy.Request(url, meta={'item': item}, callback=self.parse_narrative_api_response)
 
         n_total = json_dict.get("payLoad", dict()).get("totalRecordsUpper")
 
@@ -104,6 +106,16 @@ class NgagovauSpider(scrapy.Spider):
             json_data['startIndex'] = start_idx
             yield JsonRequest(self.start_urls[0], data=json_data, callback=self.parse_search_api_response, meta={"json_data": json_data})
 
+    def parse_narrative_api_response(self, response):
+        item = response.meta.get('item')
 
+        json_str = response.text
+        json_dict = json.loads(json_str)
+        payload = json_dict.get("payLoad", [])
+        if len(payload) > 0:
+            html_str = payload[0].get("narNarrative", "")
+            sel = Selector(text=html_str)
+            item['description'] = " ".join(sel.xpath('//text()').getall())
 
+        yield item
 
