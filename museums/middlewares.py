@@ -79,3 +79,14 @@ class BrightDataDownloaderMiddleware:
 
         request.headers['Proxy-Authorization'] = basic_auth_header(username, BRIGHT_DATA_ZONE_PASSWORD)
 
+class TLSAPIDownloaderMiddleware:
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls
+
+    def process_request(self, request, spider):
+        headers = request.headers
+        headers['poptls-url'] = request.url
+
+        spider.crawler.engine.crawl(scrapy.Request("http://localhost:8082", headers=headers, callback=request.callback, dont_filter=True))
+
