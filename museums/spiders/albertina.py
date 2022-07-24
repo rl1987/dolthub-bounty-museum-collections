@@ -256,8 +256,8 @@ class AlbertinaSpider(scrapy.Spider):
 
     def parse_search_page(self, response):
         sel = self.get_selector(response)
-
-        for ng_click in sel.xpath('//*/@ng-click').getall():
+        ng_clicks = sel.xpath('//*[starts-with(@ng-click, "jumpToRecord")]/@ng-click').getall()
+        for ng_click in ng_clicks:
             item_no = ng_click.replace("jumpToRecord('", "").replace("')", "")
 
             json_payload = {
@@ -485,6 +485,9 @@ class AlbertinaSpider(scrapy.Spider):
             logging.debug(json_payload)
 
             yield JsonRequest(self.start_urls[0], data=json_payload, callback=self.parse_artwork_page)
+
+        if len(ng_clicks) < PER_PAGE:
+            return
 
         json_payload = response.meta.get('json_payload')
         json_payload['searchSpec']['first'] += PER_PAGE
