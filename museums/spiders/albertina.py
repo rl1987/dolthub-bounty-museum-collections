@@ -501,6 +501,7 @@ class AlbertinaSpider(scrapy.Spider):
         item['object_number'] = sel.xpath('//div[text()="Inventory number"]/following-sibling::div/text()').get()
         item['institution_name'] = 'Albertina'
         item['institution_city'] = 'Vienna'
+        item['institution_state'] = 'Vienna'
         item['institution_country'] = 'Austria'
         item['institution_latitude'] = 48.2046992
         item['institution_longitude'] = 16.3659937
