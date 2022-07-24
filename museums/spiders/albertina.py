@@ -6,6 +6,8 @@ from scrapy.selector import Selector
 import json
 import logging
 
+from museums.items import ObjectItem
+
 PER_PAGE = 60
 
 class AlbertinaSpider(scrapy.Spider):
@@ -240,7 +242,7 @@ class AlbertinaSpider(scrapy.Spider):
 
         yield JsonRequest(self.start_urls[0], data=json_payload, callback=self.parse_search_page, meta={'json_payload': json_payload})
 
-    def parse_search_page(self, response):
+    def get_selector(self, response):
         json_str = response.text
         json_dict = json.loads(json_str)
 
@@ -249,6 +251,11 @@ class AlbertinaSpider(scrapy.Spider):
             return
 
         sel = Selector(text=html_str)
+
+        return sel
+
+    def parse_search_page(self, response):
+        sel = self.get_selector(response)
 
         for ng_click in sel.xpath('//*/@ng-click').getall():
             item_no = ng_click.replace("jumpToRecord('", "").replace("')", "")
@@ -487,5 +494,29 @@ class AlbertinaSpider(scrapy.Spider):
         yield JsonRequest(self.start_urls[0], data=json_payload, callback=self.parse_search_page, meta={'json_payload': json_payload})
 
     def parse_artwork_page(self, response):
-        logging.info(response.text)
+        sel = self.get_selector(response)
+        
+        item = ObjectItem()
+        
+        item['object_number'] = sel.xpath('//div[text()="Inventory number"]/following-sibling::div/text()').get()
+        item['institution_name'] = 'Albertina'
+        item['institution_city'] = 'Vienna'
+        item['institution_country'] = 'Austria'
+        item['institution_latitude'] = 48.2046992
+        item['institution_longitude'] = 16.3659937
+        # XXX: department
+        item['category'] = sel.xpath('//div[text()="Object category"]/following-sibling::div/text()').get()
+        item['title'] = sel.xpath('//div[@class="recordViewRecordTitle"]/text()').get()
+        # XXX: current_location, dimensions, inscription
+        item['description'] = " ".join(sel.xpath('//div[@class="recordViewRecordfieldValueSmall"]/text()').getall())
+        item['provenance'] = sel.xpath('//div[text()="Provenance"]/following-sibling::div/text()').get()
+        # XXX: materials
+        item['technique'] = sel.xpath('//div[text()="Technique"]/following-sibling::div/text()').get()
+        # XXX: from_location, culture, date...
+        item['maker_full_name'] = "|".join(sel.xpath('//span[@class="recordViewRecordfieldValueHyperlinked"]/text()').getall())
+        item['credit_line'] = sel.xpath('//span[text()="Bibliography"]/following-sibling::div/text()').get()
+        item['image_url'] = sel.xpath('//img[@class="img-responsive"]/@src').get()
+        item['source_1'] = sel.xpath('//div[text()="Permalink"]/following-sibling::div/text()').get()
+
+        yield item
 
