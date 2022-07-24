@@ -71,7 +71,7 @@ class BrightDataDownloaderMiddleware:
 
     def process_request(self, request, spider):
         if not BRIGHT_DATA_ENABLED:
-            return
+            return None
 
         request.meta['proxy'] = 'http://zproxy.lum-superproxy.io:22225'
         
@@ -79,14 +79,20 @@ class BrightDataDownloaderMiddleware:
 
         request.headers['Proxy-Authorization'] = basic_auth_header(username, BRIGHT_DATA_ZONE_PASSWORD)
 
-class TLSAPIDownloaderMiddleware:
-    @classmethod
-    def from_crawler(cls, crawler):
-        return cls
+import logging
 
+class TLSAPIDownloaderMiddleware:
     def process_request(self, request, spider):
+        if request.url == "http://localhost:8082":
+            return None
+
         headers = request.headers
         headers['poptls-url'] = request.url
+        
+        request = scrapy.Request("http://localhost:8082", headers=headers, callback=request.callback, dont_filter=True)
 
-        spider.crawler.engine.crawl(scrapy.Request("http://localhost:8082", headers=headers, callback=request.callback, dont_filter=True))
+        logging.info(headers)
+        logging.info(request)
+
+        return request
 
