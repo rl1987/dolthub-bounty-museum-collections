@@ -3,7 +3,9 @@
 import csv
 import json
 from pprint import pprint
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlencode
+import sys
+import time
 
 from lxml import html
 import requests
@@ -29,6 +31,47 @@ PROXIES = {
     'https': 'http://lum-customer-c_cecd546c-zone-zone_dc_artsandculture:kd9ni4qgyyuv@zproxy.lum-superproxy.io:22225'
 }
 
+N_TRIES = 5
+TIMEOUT = 2.0
+
+def safe_get(url, params=None, headers=None, cookies=None, proxies=None):
+    tries_left = N_TRIES
+
+    if params is not None:
+        complete_url = url + "?" + urlencode(params)
+    else:
+        complete_url = url
+
+    backoff = 0.5
+
+    resp = None
+
+    while tries_left > 0:
+        try:
+            resp = requests.get(
+                url,
+                params=params,
+                headers=headers,
+                proxies=proxies,
+                timeout=TIMEOUT,
+                verify=False,
+            )
+            return resp
+        except KeyboardInterrupt:
+            sys.exit()
+        except Exception as e:
+            tries_left = tries_left - 1
+
+            print(e)
+            print("GET {} failed - {} attempts left".format(complete_url, tries_left))
+            print("Sleeping for {} seconds".format(backoff))
+            time.sleep(backoff)
+            backoff = 2 * backoff
+
+    print("GET {} - giving up".format(complete_url))
+
+    return None
+
 def scrape_artwork_details(link, in_row):
     asset_id = link.split("/")[-1]
 
@@ -38,8 +81,10 @@ def scrape_artwork_details(link, in_row):
         'rt': 'j',
     }
 
-    resp = requests.get("https://artsandculture.google.com/api/asset", params=params, 
+    resp = safe_get("https://artsandculture.google.com/api/asset", params=params, 
             headers=HEADERS, proxies=PROXIES)
+    if resp is None:
+        return None
     print(resp.url)
 
     if resp.status_code != 200:
@@ -112,8 +157,10 @@ def scrape_artwork_data(in_row):
             'rt': 'j',
         }
 
-        resp = requests.get("https://artsandculture.google.com/api/assets/images", params=params,
+        resp = safe_get("https://artsandculture.google.com/api/assets/images", params=params,
                 headers=HEADERS, proxies=PROXIES)
+        if resp is None:
+            break
         print(resp.url)
 
         if resp.status_code != 200:
