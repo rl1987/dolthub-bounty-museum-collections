@@ -7,6 +7,11 @@ from pprint import pprint
 import requests
 
 FIELDNAMES = [ "name", "slug", "city", "state", "country", "latitude", "longitude" ]
+PROXIES = {
+    'http': 'http://lum-customer-c_cecd546c-zone-zone_dc_artsandculture:kd9ni4qgyyuv@zproxy.lum-superproxy.io:22225',
+    'https': 'http://lum-customer-c_cecd546c-zone-zone_dc_artsandculture:kd9ni4qgyyuv@zproxy.lum-superproxy.io:22225'
+}
+
 
 def main():
     out_f = open("partners.csv", "w", encoding="utf-8")
@@ -31,7 +36,7 @@ def main():
             'rt': 'j',
         }
         
-        resp = requests.get('https://artsandculture.google.com/api/objects/partner', params=params, headers=headers)
+        resp = requests.get('https://artsandculture.google.com/api/objects/partner', params=params, headers=headers, proxies=PROXIES)
         print(resp.url)
 
         if resp.status_code != 200:
