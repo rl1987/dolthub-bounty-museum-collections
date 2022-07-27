@@ -10,84 +10,11 @@ from museums.items import ObjectItem
 class VictoriaNAlbertSpider(scrapy.Spider):
     name = 'victorianalbert'
     allowed_domains = ['api.vam.ac.uk', 'collections.vam.ac.uk']
+    start_urls = ['https://collections.vam.ac.uk/item/O' + str(i) for i in range(1, 2000000)]
 
     def start_requests(self):
-        params = {
-            "page": 1,
-            "page_size": 50
-        }
-
-        url = "https://api.vam.ac.uk/v2/objects/search?" + urlencode(params)
-
-        yield scrapy.Request(url, callback=self.parse_clusters)
-
-    def recursively_generate_requests(self, clusters, params):
-        n_cluster_keys = len(clusters)
-
-        key = list(clusters.keys())[0]
-        
-        if n_cluster_keys == 1:
-            for value in clusters.get(key):
-                new_params = dict(params)
-                new_params[key] = value
-
-                url = "https://api.vam.ac.uk/v2/objects/search?" + urlencode(new_params)
-                yield scrapy.Request(url, callback=self.parse_search_page)
-        else:
-            new_clusters = dict(clusters)
-            del new_clusters[key]
-
-            for value in clusters.get(key):
-                new_params = dict(params)
-                new_params[key] = value
-
-                for request in self.recursively_generate_requests(new_clusters, new_params):
-                    yield request
-
-    def parse_clusters(self, response):
-        json_dict = json.loads(response.text)
-
-        clusters = dict()
-
-        for cname, cdict in json_dict.get("clusters").items():
-            clusters["id_" + cname] = list(map(lambda term: term.get("id"), cdict.get("terms")))
-
-        del clusters['id_person']
-        del clusters['id_organisation']
-        del clusters['id_collection']
-        del clusters['id_material']
-        del clusters['id_style']
-        del clusters['id_technique']
-
-        self.logger.debug(clusters)
- 
-        params = {
-            "page": 1,
-            "page_size": 50
-        }
-
-        for request in self.recursively_generate_requests(clusters, params):
-            self.logger.info(request)
-            yield request
-
-    def parse_search_page(self, response):
-        json_dict = json.loads(response.text)
-        o = urlparse(response.url)
-        old_params = dict(parse_qsl(o.query))
-
-        records = json_dict.get("records", [])
-        for record in records:
-            url = 'https://collections.vam.ac.uk/item/' + record.get("systemNumber")
-            yield scrapy.Request(url, callback=self.parse_object_page)
-
-        if len(records) < int(old_params.get('page_size')):
-            return
-
-        new_params = dict(old_params)
-        new_params['page'] = int(new_params['page']) + 1
-        
-        url = "https://api.vam.ac.uk/v2/objects/search?" + urlencode(new_params)
-        yield scrapy.Request(url, callback=self.parse_search_page)
+        for start_url in self.start_urls:
+            yield scrapy.Request(start_url, callback=self.parse_object_page)
 
     def parse_object_page(self, response):
         item = ObjectItem()
