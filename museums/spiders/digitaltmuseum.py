@@ -6,10 +6,11 @@ PER_PAGE = 48
 
 from museums.items import ObjectItem
 
+
 class DigitaltmuseumSpider(scrapy.Spider):
-    name = 'digitaltmuseum'
-    allowed_domains = ['digitaltmuseum.org']
-    start_urls = ['https://digitaltmuseum.org/owners/']
+    name = "digitaltmuseum"
+    allowed_domains = ["digitaltmuseum.org"]
+    start_urls = ["https://digitaltmuseum.org/owners/"]
 
     def start_requests(self):
         yield scrapy.Request(self.start_urls[0], callback=self.parse_owner_list)
@@ -19,26 +20,32 @@ class DigitaltmuseumSpider(scrapy.Spider):
             yield response.follow(l, callback=self.parse_owner_page)
 
     def parse_owner_page(self, response):
-        museum_name = response.xpath('//meta[@property="og:description"]/@content').get()
+        museum_name = response.xpath(
+            '//meta[@property="og:description"]/@content'
+        ).get()
         latitude = response.xpath('//figure[@class="c-owner-map"]/@lat').get()
         longitude = response.xpath('//figure[@class="c-owner-map"]/@lng').get()
 
         meta_dict = {
-            'institution_name': museum_name,
-            'latitude': latitude,
-            'longitude': longitude
+            "institution_name": museum_name,
+            "latitude": latitude,
+            "longitude": longitude,
         }
 
         owner_abbrev = response.url.split("/")[-1]
 
-        search_link = 'https://digitaltmuseum.org/search/?aq=owner%3A%22{}%22'.format(owner_abbrev)
-        yield response.follow(search_link, callback=self.parse_search_page, meta=meta_dict)
+        search_link = "https://digitaltmuseum.org/search/?aq=owner%3A%22{}%22".format(
+            owner_abbrev
+        )
+        yield response.follow(
+            search_link, callback=self.parse_search_page, meta=meta_dict
+        )
 
     def parse_search_page(self, response):
         meta_dict = {
-            'institution_name': response.meta.get('institution_name'),
-            'latitude': response.meta.get('latitude'),
-            'longitude': response.meta.get('longitude')
+            "institution_name": response.meta.get("institution_name"),
+            "latitude": response.meta.get("latitude"),
+            "longitude": response.meta.get("longitude"),
         }
 
         got_results = 0
@@ -46,7 +53,7 @@ class DigitaltmuseumSpider(scrapy.Spider):
         for l in response.xpath('//a[@class="module__grid"]/@href').getall():
             if l.startswith("/owner") or l.startswith("/search"):
                 continue
-            
+
             got_results += 1
             yield response.follow(l, callback=self.parse_object_page, meta=meta_dict)
 
@@ -55,46 +62,77 @@ class DigitaltmuseumSpider(scrapy.Spider):
 
         params = dict(old_params)
 
-        if old_params.get('o') is None:
-            params['o'] = got_results
-            params['n'] = PER_PAGE
-            params['omit'] = 1
+        if old_params.get("o") is None:
+            params["o"] = got_results
+            params["n"] = PER_PAGE
+            params["omit"] = 1
         else:
             if got_results < PER_PAGE:
                 return
 
-            params['o'] = int(old_params['o']) + PER_PAGE
+            params["o"] = int(old_params["o"]) + PER_PAGE
 
-        next_page_url = 'https://digitaltmuseum.org/search/?' + urlencode(params)
+        next_page_url = "https://digitaltmuseum.org/search/?" + urlencode(params)
         yield scrapy.Request(next_page_url, self.parse_search_page, meta=meta_dict)
 
     def parse_object_page(self, response):
         item = ObjectItem()
-        
-        item['object_number'] = "".join(response.xpath('//li[./b[text()="DIMU-CODE"]]/text()').getall()).strip()
-        item['institution_name'] = response.meta.get('institution_name')
-        item['institution_latitude'] = response.meta.get('institution_latitude')
-        item['institution_longitude'] = response.meta.get('institution_longitude')
-        item['department'] = "".join(response.xpath('//li[./b[text()="Part of collection"]]/text()').getall()).strip()
-        item['category'] = response.xpath('//li[./b[text()="Type"]]/a/text()').get("").strip()
-        item['title'] = response.xpath('//div[@class="article__title"]/h1/text()').get()
-        item['description'] = " ".join(response.xpath('//div[@class="article__leadtext"]/div[@class="text__expanded"]/p/text()').getall()).strip()
+
+        item["object_number"] = "".join(
+            response.xpath('//li[./b[text()="DIMU-CODE"]]/text()').getall()
+        ).strip()
+        item["institution_name"] = response.meta.get("institution_name")
+        item["institution_latitude"] = response.meta.get("institution_latitude")
+        item["institution_longitude"] = response.meta.get("institution_longitude")
+        item["department"] = "".join(
+            response.xpath('//li[./b[text()="Part of collection"]]/text()').getall()
+        ).strip()
+        item["category"] = (
+            response.xpath('//li[./b[text()="Type"]]/a/text()').get("").strip()
+        )
+        item["title"] = response.xpath('//div[@class="article__title"]/h1/text()').get()
+        item["description"] = " ".join(
+            response.xpath(
+                '//div[@class="article__leadtext"]/div[@class="text__expanded"]/p/text()'
+            ).getall()
+        ).strip()
         # XXX: current_location
-        item['dimensions'] = " ".join(response.xpath('//li[./b[text()="Dimensions"]]/text()').getall()).strip()
-        item['inscription'] = " ".join(response.xpath('//li[./b[text()="Inscription"]]/ul/li/text()').getall()).strip()
-        item['provenance'] = " ".join(response.xpath('//li[./b[text()="Provenance"]]/text()').getall()).strip()
-        item['materials'] = "|".join(response.xpath('//li[./b[text()="Materials"]]/a/text()').getall()).strip()
-        item['technique'] = "|".join(response.xpath('//li[./b[text()="Techniques"]]/a/text()').getall()).strip()
+        item["dimensions"] = " ".join(
+            response.xpath('//li[./b[text()="Dimensions"]]/text()').getall()
+        ).strip()
+        item["inscription"] = " ".join(
+            response.xpath('//li[./b[text()="Inscription"]]/ul/li/text()').getall()
+        ).strip()
+        item["provenance"] = " ".join(
+            response.xpath('//li[./b[text()="Provenance"]]/text()').getall()
+        ).strip()
+        item["materials"] = "|".join(
+            response.xpath('//li[./b[text()="Materials"]]/a/text()').getall()
+        ).strip()
+        item["technique"] = "|".join(
+            response.xpath('//li[./b[text()="Techniques"]]/a/text()').getall()
+        ).strip()
         # XXX: from_location, culture
-        item['date_description'] = " ".join(response.xpath('//li[./b[text()="Creation date"]]/text()').getall()).strip()
-        item['maker_full_name'] = "|".join(response.xpath('//li[./b[text()="Artist"]]/a/text()').getall()).strip()
-        item['acquired_from'] = " ".join(response.xpath('//li[./b[text()="Acquisition"]]/text()').getall()).strip()
-        item['image_url'] = response.xpath('//meta[@property="og:image"]/@content').get()
-        item['source_1'] = response.url
+        item["date_description"] = " ".join(
+            response.xpath('//li[./b[text()="Creation date"]]/text()').getall()
+        ).strip()
+        item["maker_full_name"] = "|".join(
+            response.xpath('//li[./b[text()="Artist"]]/a/text()').getall()
+        ).strip()
+        item["acquired_from"] = " ".join(
+            response.xpath('//li[./b[text()="Acquisition"]]/text()').getall()
+        ).strip()
+        item["image_url"] = response.xpath(
+            '//meta[@property="og:image"]/@content'
+        ).get()
+        item["source_1"] = response.url
         try:
-            item['accession_number'] = response.xpath('//li[./b[text()="Identifier"]]/text()').getall()[-1].strip()
+            item["accession_number"] = (
+                response.xpath('//li[./b[text()="Identifier"]]/text()')
+                .getall()[-1]
+                .strip()
+            )
         except:
             return
 
         yield item
-

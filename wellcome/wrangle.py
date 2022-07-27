@@ -46,6 +46,7 @@ FIELDNAMES = [
     "source_2",
 ]
 
+
 def extract_maker_names(contributors):
     maker_names = []
 
@@ -53,6 +54,7 @@ def extract_maker_names(contributors):
         maker_names.append(contributor.get("agent", dict()).get("label"))
 
     return maker_names
+
 
 def extract_maker_roles(contributors):
     maker_roles = []
@@ -66,6 +68,7 @@ def extract_maker_roles(contributors):
             maker_roles.append("")
 
     return maker_roles
+
 
 def main():
     out_f = open("objects.csv", "w", encoding="utf-8")
@@ -89,12 +92,19 @@ def main():
             "dimensions": json_dict.get("physicalDescription", "")[:5000],
             "category": json_dict.get("workType", dict()).get("label", "")[:300],
             "inscription": json_dict.get("lettering", "")[:4000],
-            "date_description": json_dict.get("createdDate", dict()).get("label", "")[:500],
-            "maker_full_name": "|".join(extract_maker_names(json_dict.get("contributors", [])))[:3000],
-            "maker_role": "|".join(extract_maker_roles(json_dict.get("contributors", [])))[:2000],
+            "date_description": json_dict.get("createdDate", dict()).get("label", "")[
+                :500
+            ],
+            "maker_full_name": "|".join(
+                extract_maker_names(json_dict.get("contributors", []))
+            )[:3000],
+            "maker_role": "|".join(
+                extract_maker_roles(json_dict.get("contributors", []))
+            )[:2000],
             "image_url": json_dict.get("thumbnail", dict()).get("url", "")[:2000],
             "source_1": "https://data.wellcomecollection.org/catalogue/v2/works.json.gz",
-            "source_2": "https://api.wellcomecollection.org/catalogue/v2/works/" + json_dict.get("id")
+            "source_2": "https://api.wellcomecollection.org/catalogue/v2/works/"
+            + json_dict.get("id"),
         }
 
         csv_writer.writerow(out_row)
@@ -102,6 +112,6 @@ def main():
     in_f.close()
     out_f.close()
 
+
 if __name__ == "__main__":
     main()
-

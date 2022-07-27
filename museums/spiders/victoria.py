@@ -4,10 +4,13 @@ from urllib.parse import urljoin
 
 from museums.items import ObjectItem
 
+
 class VictoriaSpider(scrapy.Spider):
-    name = 'victoria'
-    allowed_domains = ['collections.museumsvictoria.com.au']
-    start_urls = ['https://collections.museumsvictoria.com.au/search?query=&page=1&perpage=100&view=data']
+    name = "victoria"
+    allowed_domains = ["collections.museumsvictoria.com.au"]
+    start_urls = [
+        "https://collections.museumsvictoria.com.au/search?query=&page=1&perpage=100&view=data"
+    ]
 
     def start_requests(self):
         yield scrapy.Request(self.start_urls[0], callback=self.parse_search_page)
@@ -26,33 +29,58 @@ class VictoriaSpider(scrapy.Spider):
     def parse_object_page(self, response):
         item = ObjectItem()
 
-        item['object_number'] = response.url.replace("https://collections.museumsvictoria.com.au/", "")
-        item['institution_name'] = 'Museums Victoria'
-        item['institution_city'] = 'Melbourne'
-        item['institution_state'] = 'Victoria'
-        item['institution_country'] = 'Australia'
-        item['department'] = response.xpath('//li[./h3[text()="Discipline"]]/p/a/text()').get()
-        item['category'] = response.xpath('//li[./h3[text()="Category"]]/p/a/text()').get()
-        item['title'] = " ".join(response.xpath('//h1[@id="maincontent"]/text()').getall()).strip()
-        item['description'] = "\n".join(response.xpath('//div[@class="summary"]/*/text()').getall())
-        item['dimensions'] = response.xpath('//li[./h3[contains(text(),"Overall Dimensions")]]/p/text()').get("").strip()
-        item['inscription'] = response.xpath('//li[./h3[text()="Inscriptions"]]/p/text()').get()
-        item['provenance'] = response.xpath('//li[./h3[text()="Provenance"]]/p/text()').get()
+        item["object_number"] = response.url.replace(
+            "https://collections.museumsvictoria.com.au/", ""
+        )
+        item["institution_name"] = "Museums Victoria"
+        item["institution_city"] = "Melbourne"
+        item["institution_state"] = "Victoria"
+        item["institution_country"] = "Australia"
+        item["department"] = response.xpath(
+            '//li[./h3[text()="Discipline"]]/p/a/text()'
+        ).get()
+        item["category"] = response.xpath(
+            '//li[./h3[text()="Category"]]/p/a/text()'
+        ).get()
+        item["title"] = " ".join(
+            response.xpath('//h1[@id="maincontent"]/text()').getall()
+        ).strip()
+        item["description"] = "\n".join(
+            response.xpath('//div[@class="summary"]/*/text()').getall()
+        )
+        item["dimensions"] = (
+            response.xpath('//li[./h3[contains(text(),"Overall Dimensions")]]/p/text()')
+            .get("")
+            .strip()
+        )
+        item["inscription"] = response.xpath(
+            '//li[./h3[text()="Inscriptions"]]/p/text()'
+        ).get()
+        item["provenance"] = response.xpath(
+            '//li[./h3[text()="Provenance"]]/p/text()'
+        ).get()
 
-        item['maker_full_name'] = response.xpath('//li[./h3[text()="Artist" or text()="Author" or text()="Maker"]]/p/a[1]/text()').get()
-        
-        maker_years = response.xpath('//li[./h3[text()="Artist" or text()="Author"]]/p/a[contains(@href, "date")]/text()').get()
+        item["maker_full_name"] = response.xpath(
+            '//li[./h3[text()="Artist" or text()="Author" or text()="Maker"]]/p/a[1]/text()'
+        ).get()
+
+        maker_years = response.xpath(
+            '//li[./h3[text()="Artist" or text()="Author"]]/p/a[contains(@href, "date")]/text()'
+        ).get()
         if maker_years is not None and "-" in maker_years:
-            item['maker_birth_year'] = maker_years.split("-")[0]
-            item['maker_death_year'] = maker_years.split("-")[-1]
+            item["maker_birth_year"] = maker_years.split("-")[0]
+            item["maker_death_year"] = maker_years.split("-")[-1]
 
-        item['credit_line'] = response.xpath('//li[./h3[text()="Acknowledgement"]]/p/text()').get()
-        item['acquired_from'] = response.xpath('//li[./h3[text()="Acquisition Information"]]/p/text()').get()
-        item['image_url'] = response.xpath('//div[@class="hero-media"]/img/@src').get()
-        if item.get('image_url') is not None:
-            item['image_url'] = urljoin(response.url, item['image_url'])
+        item["credit_line"] = response.xpath(
+            '//li[./h3[text()="Acknowledgement"]]/p/text()'
+        ).get()
+        item["acquired_from"] = response.xpath(
+            '//li[./h3[text()="Acquisition Information"]]/p/text()'
+        ).get()
+        item["image_url"] = response.xpath('//div[@class="hero-media"]/img/@src').get()
+        if item.get("image_url") is not None:
+            item["image_url"] = urljoin(response.url, item["image_url"])
 
-        item['source_1'] = response.url
+        item["source_1"] = response.url
 
         yield item
-

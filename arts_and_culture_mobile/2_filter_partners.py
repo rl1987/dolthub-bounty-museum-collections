@@ -7,22 +7,26 @@ import openai
 
 openai.api_key = "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"
 
-FIELDNAMES = [ "name", "slug", "city", "state", "country", "latitude", "longitude" ]
+FIELDNAMES = ["name", "slug", "city", "state", "country", "latitude", "longitude"]
+
 
 def get_answer(institution_name):
     response = openai.Completion.create(
         model="text-davinci-002",
-        prompt="Answer YES if \"{}\" is a gallery or museum. Answer NO otherwise.".format(institution_name),
+        prompt='Answer YES if "{}" is a gallery or museum. Answer NO otherwise.'.format(
+            institution_name
+        ),
         temperature=0,
         max_tokens=4,
         top_p=1,
         frequency_penalty=0,
-        presence_penalty=0
+        presence_penalty=0,
     )
 
     answer = response.get("choices")[0].text.upper().strip()
 
     return answer
+
 
 def main():
     in_f = open("partners.csv", "r")
@@ -43,6 +47,6 @@ def main():
     in_f.close()
     out_f.close()
 
+
 if __name__ == "__main__":
     main()
-

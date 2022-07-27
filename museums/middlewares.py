@@ -12,6 +12,7 @@ from itemadapter import is_item, ItemAdapter
 import logging
 import time
 
+
 class MuseumsSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
@@ -56,13 +57,19 @@ class MuseumsSpiderMiddleware:
             yield r
 
     def spider_opened(self, spider):
-        spider.logger.info('Spider opened: %s' % spider.name)
+        spider.logger.info("Spider opened: %s" % spider.name)
 
-from museums.settings import BRIGHT_DATA_ENABLED, BRIGHT_DATA_ZONE_USERNAME, BRIGHT_DATA_ZONE_PASSWORD
+
+from museums.settings import (
+    BRIGHT_DATA_ENABLED,
+    BRIGHT_DATA_ZONE_USERNAME,
+    BRIGHT_DATA_ZONE_PASSWORD,
+)
 
 from w3lib.http import basic_auth_header
 
 import random
+
 
 class BrightDataDownloaderMiddleware:
     @classmethod
@@ -73,13 +80,17 @@ class BrightDataDownloaderMiddleware:
         if not BRIGHT_DATA_ENABLED:
             return None
 
-        request.meta['proxy'] = 'http://zproxy.lum-superproxy.io:22225'
-        
+        request.meta["proxy"] = "http://zproxy.lum-superproxy.io:22225"
+
         username = BRIGHT_DATA_ZONE_USERNAME + "-session-" + str(random.random())
 
-        request.headers['Proxy-Authorization'] = basic_auth_header(username, BRIGHT_DATA_ZONE_PASSWORD)
+        request.headers["Proxy-Authorization"] = basic_auth_header(
+            username, BRIGHT_DATA_ZONE_PASSWORD
+        )
+
 
 import logging
+
 
 class TLSAPIDownloaderMiddleware:
     def process_request(self, request, spider):
@@ -87,12 +98,16 @@ class TLSAPIDownloaderMiddleware:
             return None
 
         headers = request.headers
-        headers['poptls-url'] = request.url
-        
-        request = scrapy.Request("http://localhost:8082", headers=headers, callback=request.callback, dont_filter=True)
+        headers["poptls-url"] = request.url
+
+        request = scrapy.Request(
+            "http://localhost:8082",
+            headers=headers,
+            callback=request.callback,
+            dont_filter=True,
+        )
 
         logging.info(headers)
         logging.info(request)
 
         return request
-
