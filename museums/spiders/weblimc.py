@@ -3,6 +3,8 @@ import scrapy
 import json
 from urllib.parse import urlparse, parse_qsl, urlencode
 
+from museums.items import ObjectItem
+
 PER_PAGE = 100
 
 class WeblimcSpider(scrapy.Spider):
@@ -52,12 +54,56 @@ class WeblimcSpider(scrapy.Spider):
         o = urlparse(response.url)
         old_params = dict(parse_qsl(o.query))
 
-        params = dict(params)
-        params['start_at'] = str(int(params['start_at'] + PER_PAGE))
+        params = dict(old_params)
+        params['start_at'] = str(int(params['start_at']) + PER_PAGE)
 
         next_page_url = 'https://www.salsah.org/api/search/?' + urlencode(params)
         yield scrapy.Request(next_page_url, callback=self.parse_search_api_response)
 
+    def extract_property_value(self, prop_dict, key):
+        if prop_dict.get(key) is None:
+            return None
+
+        values = prop_dict.get(key).get('values')
+
+        return "|".join(values)
+
     def parse_graphdata_api_response(self, response):
-        pass
+        json_str = response.text
+        json_dict = json.loads(json_str)
+
+        item = ObjectItem()
+
+        item['object_number'] = response.url.split("?")[0].split("/")[-1]
+
+        for key, node_dict in json_dict.get('graph', dict()).get('nodes', dict()).items():
+            node_label = node_dict.get("resinfo", dict()).get("label")
+            first_property = node_dict.get("resinfo", dict()).get("firstproperty")
+            prop_dict = node_dict.get("properties")
+
+            if node_label == "Museum":
+                item['institution_name'] = self.extract_property_value(prop_dict, 'limc:name')
+                item['institution_city'] = self.extract_property_value(prop_dict, 'limc:city')
+                item['institution_country'] = self.extract_property_value(prop_dict, 'limc:country')
+            elif node_label == "Foto" and first_property == "1":
+                item['image_url'] = 'https://www.salsah.org/core/sendlocdata.php?res={}&qtype=full&reduce=1'.format(key)
+            elif node_label == "Szene":
+                item['description'] = self.extract_property_value(prop_dict, "limc:description")
+            elif node_label == "Monument":
+                item['maker_full_name'] = self.extract_property_value(prop_dict, "limc:artist")
+                item['category'] = self.extract_property_value(prop_dict, "limc:category")
+                item['from_location'] = self.extract_property_value(prop_dict, "limc:origin")
+                if item['from_location'] is None:
+                    item['from_location'] = self.extract_property_value(prop_dict, "limc:discovery")
+                item['description'] = self.extract_property_value(prop_dict, "limc:description")
+                item['technique'] = self.extract_property_value(prop_dict, "limc:technique")
+                item['materials'] = self.extract_property_value(prop_dict, "limc:material")
+                item['title'] = self.extract_property_value(prop_dict, "limc:scenename")
+            elif node_label == "Datierung":
+                item['date_description'] = self.extract_property_value(prop_dict, "limc:period")
+
+        item['source_1'] = 'https://weblimc.org/page/monument/' + item['object_number']
+        item['source_2'] = response.url
+
+        yield item
 
