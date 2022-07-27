@@ -31,18 +31,19 @@ class CarnegieSpider(scrapy.Spider):
         'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36',
     }
     
-    def create_search_api_request(self, from_idx):
-        json_dict = {'_source': ['id', 'title', 'creators', 'creation_date', 'images', 'type'], 'query': {'bool': {'must': [{'match_all': {}}], 'filter': []}}, 'aggs': {'uniqueClassification': {'terms': {'field': 'medium', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'uniqueDepartment': {'terms': {'field': 'department', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'uniqueLocation': {'terms': {'field': 'current_location', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'creators': {'nested': {'path': 'creators'}, 'aggs': {'uniqueCreator': {'terms': {'field': 'creators.label', 'order': {'_count': 'desc'}, 'shard_size': 2000, 'size': 500}, 'aggs': {'cited': {'terms': {'field': 'creators.cited_name'}, 'aggs': {'sort': {'terms': {'field': 'creators.cited_name.sort'}}}}}}, 'uniqueNationality': {'terms': {'field': 'creators.nationality', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}}}}, 'post_filter': {'bool': {'filter': []}}, 'sort': [{'creators.cited_name.sort': {'order': 'asc', 'nested': {'path': 'creators'}}}], 'size': PER_PAGE, 'from': from_idx}
+    def create_search_api_request(self, from_idx, year):
+        json_dict = {'_source': ['id', 'title', 'creators', 'creation_date', 'images', 'type'], 'query': {'bool': {'must': [{'match_all': {}}], 'filter': []}}, 'aggs': {'uniqueClassification': {'terms': {'field': 'medium', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'uniqueDepartment': {'terms': {'field': 'department', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'uniqueLocation': {'terms': {'field': 'current_location', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'creators': {'nested': {'path': 'creators'}, 'aggs': {'uniqueCreator': {'terms': {'field': 'creators.label', 'order': {'_count': 'desc'}, 'shard_size': 2000, 'size': 500}, 'aggs': {'cited': {'terms': {'field': 'creators.cited_name'}, 'aggs': {'sort': {'terms': {'field': 'creators.cited_name.sort'}}}}}}, 'uniqueNationality': {'terms': {'field': 'creators.nationality', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}}}}, 'post_filter': {'bool': {'filter': [{'range': {'creation_earliest': {'gte': str(year), 'format': 'yyyy-MM-dd||yyyy'}}}, {'range': {'creation_latest': {'lte': str(year), 'format': 'yyyy-MM-dd||yyyy'}}}]}}, 'sort': [{'creators.cited_name.sort': {'order': 'asc', 'nested': {'path': 'creators'}}}], 'size': PER_PAGE, 'from': from_idx}
 
         logging.debug(json_dict)
         url = 'https://530828c83afb4338b9927d95f5792ed5.us-east-1.aws.found.io:9243/cmoa_objects/_search'
 
-        meta_dict = { 'from': from_idx }
+        meta_dict = { 'from': from_idx, 'year': year }
 
         return JsonRequest(url, headers=self.headers, data=json_dict, callback=self.parse_search_api_response, meta=meta_dict)
 
     def start_requests(self):
-        yield self.create_search_api_request(0)
+        for year in range(-3000, 2023):
+            yield self.create_search_api_request(0, year)
 
     def parse_search_api_response(self, response):
         json_str = response.text
@@ -56,7 +57,8 @@ class CarnegieSpider(scrapy.Spider):
         if len(json_dict.get('hits').get('hits')) == PER_PAGE:
             from_idx = response.meta.get('from')
             from_idx += PER_PAGE
-            yield self.create_search_api_request(from_idx)
+            year = response.meta.get('year')
+            yield self.create_search_api_request(from_idx, year)
 
     def textify_measurements(self, measurements):
         if measurements is None or len(measurements) == 0:
