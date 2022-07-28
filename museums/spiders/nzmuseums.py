@@ -7,6 +7,8 @@ class NzmuseumsSpider(scrapy.Spider):
     allowed_domains = ['www.nzmuseums.co.nz']
     start_urls = ['https://www.nzmuseums.co.nz/objects?view=lightbox']
 
+    coords = dict()
+
     def start_requests(self):
         yield scrapy.Request(self.start_urls[0], callback=self.parse_search_page)
 
@@ -29,9 +31,7 @@ class NzmuseumsSpider(scrapy.Spider):
             .strip()
         )
 
-        item["institution_name"] = response.meta.get("institution_name")
-        item["institution_latitude"] = response.meta.get("institution_latitude")
-        item["institution_longitude"] = response.meta.get("institution_longitude")
+        item["institution_name"] = response.xpath('//div[@class="card"]/div[@class="card-body"]/a/text()').get()
 
         item["category"] = (
             response.xpath('//p[contains(@class, "object_type")]/a/text()')
@@ -99,4 +99,29 @@ class NzmuseumsSpider(scrapy.Spider):
         ).get()
         item["source_1"] = response.url
 
+        museum_coords = self.coords.get(item['institution_name'])
+        if museum_coords is not None:
+            item['institution_latitude'] = museum_coords.get('latitude')
+            item['institution_longitude'] = museum_coords.get('longitude')
+            yield item
+        else:
+            museum_link = response.xpath('//div[@class="card"]/div[@class="card-body"]/a/@href').get()
+            yield response.follow(museum_link, callback=self.parse_museum_coords,
+                    meta={'item': item})
+
+    def parse_museum_coords(self, response):
+        item = response.meta.get('item')
+    
+        institution_latitude = response.xpath('//span[@id="latitude"]/text()').get()
+        institution_longitude = response.xpath('//span[@id="longitude"]/text()').get()
+        
+        self.coords[item['institution_name']] = {
+            'latitude': institution_latitude,
+            'longitude': institution_longitude
+        }
+
+        item['institution_latitude'] = institution_latitude
+        item['institution_longitude'] = institution_longitude
+
         yield item
+    
