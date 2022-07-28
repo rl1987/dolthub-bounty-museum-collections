@@ -13,7 +13,7 @@ class NzmuseumsSpider(scrapy.Spider):
         yield scrapy.Request(self.start_urls[0], callback=self.parse_search_page)
 
     def parse_search_page(self, response):
-        for artwork_link in response.xpath('//div[@class="lightbox-object-desc "]/a/@href'):
+        for artwork_link in response.xpath('//div[@class="lightbox-object-desc " or contains(@class, "lightbox-item-no-image")]/a/@href'):
             yield response.follow(artwork_link, callback=self.parse_object_page)
 
         next_page_link = response.xpath('//a[@aria-label="Next"]/@href').get()
