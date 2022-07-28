@@ -6,6 +6,7 @@ import logging
 
 from museums.items import ObjectItem
 
+
 class CarnegieSpider(scrapy.Spider):
     name = "carnegie"
     allowed_domains = [
@@ -32,7 +33,78 @@ class CarnegieSpider(scrapy.Spider):
     }
 
     def start_requests(self):
-        json_dict = {'_source': ['id', 'title', 'creators', 'creation_date', 'images', 'type'], 'query': {'bool': {'must': [{'match_all': {}}], 'filter': []}}, 'aggs': {'uniqueClassification': {'terms': {'field': 'medium', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'uniqueDepartment': {'terms': {'field': 'department', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'uniqueLocation': {'terms': {'field': 'current_location', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'creators': {'nested': {'path': 'creators'}, 'aggs': {'uniqueCreator': {'terms': {'field': 'creators.label', 'order': {'_count': 'desc'}, 'shard_size': 2000, 'size': 500}, 'aggs': {'cited': {'terms': {'field': 'creators.cited_name'}, 'aggs': {'sort': {'terms': {'field': 'creators.cited_name.sort'}}}}}}, 'uniqueNationality': {'terms': {'field': 'creators.nationality', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}}}}, 'post_filter': {'bool': {'filter': []}}, 'sort': [{'creators.cited_name.sort': {'order': 'asc', 'nested': {'path': 'creators'}}}]}
+        json_dict = {
+            "_source": ["id", "title", "creators", "creation_date", "images", "type"],
+            "query": {"bool": {"must": [{"match_all": {}}], "filter": []}},
+            "aggs": {
+                "uniqueClassification": {
+                    "terms": {
+                        "field": "medium",
+                        "order": {"_key": "asc"},
+                        "shard_size": 2000,
+                        "size": 500,
+                    }
+                },
+                "uniqueDepartment": {
+                    "terms": {
+                        "field": "department",
+                        "order": {"_key": "asc"},
+                        "shard_size": 2000,
+                        "size": 500,
+                    }
+                },
+                "uniqueLocation": {
+                    "terms": {
+                        "field": "current_location",
+                        "order": {"_key": "asc"},
+                        "shard_size": 2000,
+                        "size": 500,
+                    }
+                },
+                "creators": {
+                    "nested": {"path": "creators"},
+                    "aggs": {
+                        "uniqueCreator": {
+                            "terms": {
+                                "field": "creators.label",
+                                "order": {"_count": "desc"},
+                                "shard_size": 2000,
+                                "size": 500,
+                            },
+                            "aggs": {
+                                "cited": {
+                                    "terms": {"field": "creators.cited_name"},
+                                    "aggs": {
+                                        "sort": {
+                                            "terms": {
+                                                "field": "creators.cited_name.sort"
+                                            }
+                                        }
+                                    },
+                                }
+                            },
+                        },
+                        "uniqueNationality": {
+                            "terms": {
+                                "field": "creators.nationality",
+                                "order": {"_key": "asc"},
+                                "shard_size": 2000,
+                                "size": 500,
+                            }
+                        },
+                    },
+                },
+            },
+            "post_filter": {"bool": {"filter": []}},
+            "sort": [
+                {
+                    "creators.cited_name.sort": {
+                        "order": "asc",
+                        "nested": {"path": "creators"},
+                    }
+                }
+            ],
+        }
 
         logging.debug(json_dict)
         url = "https://530828c83afb4338b9927d95f5792ed5.us-east-1.aws.found.io:9243/cmoa_objects/_search?scroll=1m"
@@ -41,8 +113,8 @@ class CarnegieSpider(scrapy.Spider):
             url,
             headers=self.headers,
             data=json_dict,
-            callback=self.parse_search_api_response, 
-            meta={'dont_cache': True}
+            callback=self.parse_search_api_response,
+            meta={"dont_cache": True},
         )
 
     def parse_search_api_response(self, response):
@@ -68,18 +140,21 @@ class CarnegieSpider(scrapy.Spider):
         if scroll_id is None:
             return
 
-        json_payload = {
-            "scroll": "1m",
-            "scroll_id": scroll_id
-        }
+        json_payload = {"scroll": "1m", "scroll_id": scroll_id}
 
         logging.debug(json_payload)
 
         # https://www.elastic.co/guide/en/elasticsearch/reference/5.4/search-request-scroll.html
         # https://stackoverflow.com/questions/46336470/elasticsearch-unknown-key-for-a-value-string-in-scroll
         # https://www.repost.aws/questions/QU9nXbumxSS9m64r3ZaoN_NA/how-to-perform-scroll-scroll-not-working-on-amazon-elasticsearch
-        yield JsonRequest("https://530828c83afb4338b9927d95f5792ed5.us-east-1.aws.found.io:9243/_search/scroll",
-                headers=self.headers, data=json_payload, callback=self.parse_search_api_response, dont_filter=True, meta={'dont_cache': True})
+        yield JsonRequest(
+            "https://530828c83afb4338b9927d95f5792ed5.us-east-1.aws.found.io:9243/_search/scroll",
+            headers=self.headers,
+            data=json_payload,
+            callback=self.parse_search_api_response,
+            dont_filter=True,
+            meta={"dont_cache": True},
+        )
 
     def textify_measurements(self, measurements):
         if measurements is None or len(measurements) == 0:
