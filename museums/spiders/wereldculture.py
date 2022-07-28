@@ -4,8 +4,9 @@ from scrapy.selector import Selector
 
 import logging
 import json
+from urllib.parse import urljoin
 
-# The National Museum of World Cultures
+from museums.items import ObjectItem
 
 PER_PAGE = 12
 
@@ -460,7 +461,7 @@ class WereldcultureSpider(scrapy.Spider):
                 headers=self.headers,
                 meta={"json_payload": json_payload})
 
-    def parse_search_page(self, response):
+    def get_selector_from_response(self, response):
         json_str = response.text
         json_dict = json.loads(json_str)
         html_str = json_dict.get("d", dict()).get("result")
@@ -468,6 +469,12 @@ class WereldcultureSpider(scrapy.Spider):
             return
         
         sel = Selector(text=html_str)
+        return sel
+
+    def parse_search_page(self, response):
+        sel = self.get_selector_from_response(response)
+        if sel is None:
+            return
 
         ng_clicks = sel.xpath('//*[starts-with(@ng-click, "jumpToRecord")]/@ng-click').getall()
         for ng_click in ng_clicks:
@@ -919,6 +926,31 @@ class WereldcultureSpider(scrapy.Spider):
                 headers=self.headers, meta={"json_payload": json_payload})
 
     def parse_object_page(self, response):
-        pass
+        sel = self.get_selector_from_response(response)
+        if sel is None:
+            return
+            
+        item = ObjectItem()
+
+        item['object_number'] = sel.xpath('//strong[text()="Object number : " or text()="Inventarisnummer : "]/following-sibling::*/text()').get()
+        item['institution_name'] = 'The National Museum of World Cultures'
+        item['institution_city'] = 'Amsterdam'
+        item['institution_country'] = 'Netherlands'
+        item['institution_latitude'] = 52.3626561
+        item['institution_longitude'] = 4.9211787
+        # XXX: category, department
+        item['title'] = sel.xpath('//h3[@data-drag="true"]/text()').get()
+        # XXX: current_location, dimensions, inscription
+        item['description'] = sel.xpath('//div[./button[@data-toggle="modal"]]/text()').get()
+        item['provenance'] = "|".join(sel.xpath('//div[./strong[text()="Origin : " or text()="Herkomst : "]]/span/text()').getall())
+        item['materials'] = sel.xpath('//strong[text()="Medium : "]/following-sibling::*/text()').get()
+        item['culture'] = sel.xpath('//strong[text()="Culture : " or text()="Cultuur : "]/following-sibling::*/text()').get()
+        item['credit_line'] = sel.xpath('//strong[text()="Creditline : "]/following-sibling::*/text()').get()
+        item['image_url'] = sel.xpath('//*[@data-drag="true"]/@data-draggingimage').get()
+        if item['image_url'] is not None:
+            item['image_url'] = urljoin(response.url, item['image_url'])
+        item['source_1'] = sel.xpath('//div[./b[text()="Permanent link to this object : "]]/text()').get()
+
+        yield item
 
 
