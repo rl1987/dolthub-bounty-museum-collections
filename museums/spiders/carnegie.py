@@ -25,7 +25,6 @@ class CarnegieSpider(scrapy.Spider):
         "content-type": "application/json",
         "origin": "https://collection.cmoa.org",
         "pragma": "no-cache",
-        "referer": "https://collection.cmoa.org/",
         "sec-ch-ua": '".Not/A)Brand";v="99", "Google Chrome";v="103", "Chromium";v="103"',
         "sec-ch-ua-mobile": "?0",
         "sec-ch-ua-platform": '"macOS"',
@@ -35,123 +34,19 @@ class CarnegieSpider(scrapy.Spider):
         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
     }
 
-    def create_search_api_request(self, from_idx, from_year, to_year):
-        json_dict = {
-            "_source": ["id", "title", "creators", "creation_date", "images", "type"],
-            "query": {"bool": {"must": [{"match_all": {}}], "filter": []}},
-            "aggs": {
-                "uniqueClassification": {
-                    "terms": {
-                        "field": "medium",
-                        "order": {"_key": "asc"},
-                        "shard_size": 2000,
-                        "size": 500,
-                    }
-                },
-                "uniqueDepartment": {
-                    "terms": {
-                        "field": "department",
-                        "order": {"_key": "asc"},
-                        "shard_size": 2000,
-                        "size": 500,
-                    }
-                },
-                "uniqueLocation": {
-                    "terms": {
-                        "field": "current_location",
-                        "order": {"_key": "asc"},
-                        "shard_size": 2000,
-                        "size": 500,
-                    }
-                },
-                "creators": {
-                    "nested": {"path": "creators"},
-                    "aggs": {
-                        "uniqueCreator": {
-                            "terms": {
-                                "field": "creators.label",
-                                "order": {"_count": "desc"},
-                                "shard_size": 2000,
-                                "size": 500,
-                            },
-                            "aggs": {
-                                "cited": {
-                                    "terms": {"field": "creators.cited_name"},
-                                    "aggs": {
-                                        "sort": {
-                                            "terms": {
-                                                "field": "creators.cited_name.sort"
-                                            }
-                                        }
-                                    },
-                                }
-                            },
-                        },
-                        "uniqueNationality": {
-                            "terms": {
-                                "field": "creators.nationality",
-                                "order": {"_key": "asc"},
-                                "shard_size": 2000,
-                                "size": 500,
-                            }
-                        },
-                    },
-                },
-            },
-            "post_filter": {
-                "bool": {
-                    "filter": [
-                        {
-                            "range": {
-                                "creation_earliest": {
-                                    "gte": str(from_year),
-                                    "format": "yyyy-MM-dd||yyyy",
-                                }
-                            }
-                        },
-                        {
-                            "range": {
-                                "creation_latest": {
-                                    "lte": str(to_year),
-                                    "format": "yyyy-MM-dd||yyyy",
-                                }
-                            }
-                        },
-                    ]
-                }
-            },
-            "sort": [
-                {
-                    "creators.cited_name.sort": {
-                        "order": "asc",
-                        "nested": {"path": "creators"},
-                    }
-                }
-            ],
-            "size": PER_PAGE,
-            "from": from_idx,
-        }
+    def start_requests(self):
+        json_dict = {'_source': ['id', 'title', 'creators', 'creation_date', 'images', 'type'], 'query': {'bool': {'must': [{'match_all': {}}], 'filter': []}}, 'aggs': {'uniqueClassification': {'terms': {'field': 'medium', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'uniqueDepartment': {'terms': {'field': 'department', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'uniqueLocation': {'terms': {'field': 'current_location', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}, 'creators': {'nested': {'path': 'creators'}, 'aggs': {'uniqueCreator': {'terms': {'field': 'creators.label', 'order': {'_count': 'desc'}, 'shard_size': 2000, 'size': 500}, 'aggs': {'cited': {'terms': {'field': 'creators.cited_name'}, 'aggs': {'sort': {'terms': {'field': 'creators.cited_name.sort'}}}}}}, 'uniqueNationality': {'terms': {'field': 'creators.nationality', 'order': {'_key': 'asc'}, 'shard_size': 2000, 'size': 500}}}}}, 'post_filter': {'bool': {'filter': []}}, 'sort': [{'creators.cited_name.sort': {'order': 'asc', 'nested': {'path': 'creators'}}}]}
 
         logging.debug(json_dict)
-        url = "https://530828c83afb4338b9927d95f5792ed5.us-east-1.aws.found.io:9243/cmoa_objects/_search"
+        url = "https://530828c83afb4338b9927d95f5792ed5.us-east-1.aws.found.io:9243/cmoa_objects/_search?scroll=1m"
 
-        meta_dict = {"from": from_idx, "from_year": from_year, "to_year": to_year}
-
-        return JsonRequest(
+        yield JsonRequest(
             url,
             headers=self.headers,
             data=json_dict,
-            callback=self.parse_search_api_response,
-            meta=meta_dict,
+            callback=self.parse_search_api_response, 
+            meta={'dont_cache': True}
         )
-
-    def start_requests(self):
-        yield self.create_search_api_request(0, -3000, 1900)
-        yield self.create_search_api_request(0, 1901, 1946)
-        yield self.create_search_api_request(0, 1947, 1957)
-
-        for year in range(1958, 2023):
-            yield self.create_search_api_request(0, year, year)
 
     def parse_search_api_response(self, response):
         json_str = response.text
@@ -166,12 +61,22 @@ class CarnegieSpider(scrapy.Spider):
                 url, headers=self.headers, callback=self.parse_source_api_response
             )
 
-        if len(json_dict.get("hits").get("hits")) == PER_PAGE:
-            from_idx = response.meta.get("from")
-            from_idx += PER_PAGE
-            from_year = response.meta.get("from_year")
-            to_year = response.meta.get("to_year")
-            yield self.create_search_api_request(from_idx, from_year, to_year)
+        scroll_id = json_dict.get("_scroll_id")
+        if scroll_id is None:
+            return
+
+        json_payload = {
+            "scroll": "1m",
+            "scroll_id": scroll_id
+        }
+
+        logging.debug(json_payload)
+
+        # https://www.elastic.co/guide/en/elasticsearch/reference/5.4/search-request-scroll.html
+        # https://stackoverflow.com/questions/46336470/elasticsearch-unknown-key-for-a-value-string-in-scroll
+        # https://www.repost.aws/questions/QU9nXbumxSS9m64r3ZaoN_NA/how-to-perform-scroll-scroll-not-working-on-amazon-elasticsearch
+        yield JsonRequest("https://530828c83afb4338b9927d95f5792ed5.us-east-1.aws.found.io:9243/_search/scroll",
+                headers=self.headers, data=json_payload, callback=self.parse_search_api_response, dont_filter=True, meta={'dont_cache': True})
 
     def textify_measurements(self, measurements):
         if measurements is None or len(measurements) == 0:
