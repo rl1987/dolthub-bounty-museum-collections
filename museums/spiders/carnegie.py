@@ -85,7 +85,10 @@ class CarnegieSpider(scrapy.Spider):
         text = ""
 
         for submeasurement in measurements:
-            text += submeasurement.get("type", "") + ": "
+            m_type = submeasurement.get("type", "")
+            if m_type is not None:
+                text += m_type + ": "
+
             text += (
                 submeasurement.get("fraction", dict()).get("height", "")
                 + " x "
