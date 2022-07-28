@@ -6,9 +6,6 @@ import logging
 
 from museums.items import ObjectItem
 
-PER_PAGE = 100
-
-
 class CarnegieSpider(scrapy.Spider):
     name = "carnegie"
     allowed_domains = [
@@ -52,14 +49,20 @@ class CarnegieSpider(scrapy.Spider):
         json_str = response.text
         json_dict = json.loads(json_str)
 
+        n = 0
+
         for hit_dict in json_dict.get("hits", dict()).get("hits", []):
             source_id = hit_dict.get("_id")
             url = "https://530828c83afb4338b9927d95f5792ed5.us-east-1.aws.found.io:9243/cmoa_objects/object/{}/_source".format(
                 source_id.replace(":", "%3A").replace("/", "%2F")
             )
+            n += 1
             yield scrapy.Request(
                 url, headers=self.headers, callback=self.parse_source_api_response
             )
+
+        if n == 0:
+            return
 
         scroll_id = json_dict.get("_scroll_id")
         if scroll_id is None:
