@@ -931,24 +931,25 @@ class WereldcultureSpider(scrapy.Spider):
             return
             
         item = ObjectItem()
-
-        item['object_number'] = sel.xpath('//strong[text()="Object number : " or text()="Inventarisnummer : "]/following-sibling::*/text()').get()
+        
+        item['object_number'] = sel.xpath('//strong[text()="Object number : " or text()="Inventarisnummer : "]/following-sibling::text()').get()
         item['institution_name'] = 'The National Museum of World Cultures'
         item['institution_city'] = 'Amsterdam'
+        item['institution_state'] = ''
         item['institution_country'] = 'Netherlands'
         item['institution_latitude'] = 52.3626561
         item['institution_longitude'] = 4.9211787
         # XXX: category, department
         item['title'] = sel.xpath('//h3[@data-drag="true"]/text()').get()
         # XXX: current_location, dimensions, inscription
-        item['description'] = sel.xpath('//div[./button[@data-toggle="modal"]]/text()').get()
+        item['description'] = " ".join(sel.xpath('//div[./button[@data-toggle="modal"]]/text()').getall()).strip()
         item['provenance'] = "|".join(sel.xpath('//div[./strong[text()="Origin : " or text()="Herkomst : "]]/span/text()').getall())
-        item['materials'] = sel.xpath('//strong[text()="Medium : "]/following-sibling::*/text()').get()
-        item['culture'] = sel.xpath('//strong[text()="Culture : " or text()="Cultuur : "]/following-sibling::*/text()').get()
-        item['credit_line'] = sel.xpath('//strong[text()="Creditline : "]/following-sibling::*/text()').get()
+        item['materials'] = sel.xpath('//strong[text()="Medium : " or text()="Materiaal : "]/following-sibling::text()').get()
+        item['culture'] = sel.xpath('//strong[text()="Culture : " or text()="Cultuur : "]/following-sibling::text()').get()
+        item['credit_line'] = sel.xpath('//strong[text()="Creditline : "]/following-sibling::text()').get()
         item['image_url'] = sel.xpath('//*[@data-drag="true"]/@data-draggingimage').get()
         if item['image_url'] is not None:
-            item['image_url'] = urljoin(response.url, item['image_url'])
+            item['image_url'] = urljoin(response.url, '/' + item['image_url'].split("&width")[0])
         item['source_1'] = sel.xpath('//div[./b[text()="Permanent link to this object : "]]/text()').get()
 
         yield item
