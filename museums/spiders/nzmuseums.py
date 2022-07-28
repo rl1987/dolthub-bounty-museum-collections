@@ -57,11 +57,11 @@ class NzmuseumsSpider(scrapy.Spider):
             .get("")
             .strip()
         )
-        item["inscription"] = (
-            response.xpath('//p[contains(@class, "inscription")]/text()')
-            .get("")
-            .strip()
-        )
+
+        inscriptions = response.xpath('//p[contains(@class, "inscription")]/text()').getall()
+        inscriptions = list(map(lambda i: i.strip(), inscriptions))
+        item['inscription'] = " ".join(inscriptions)
+
         item["materials"] = response.xpath(
             '//p[contains(@class, "medium_description")]/text()'
         ).getall()
@@ -94,9 +94,7 @@ class NzmuseumsSpider(scrapy.Spider):
             .get("")
             .strip()
         )
-        item["image_url"] = response.xpath(
-            '//a[./img[@class="eh-low-res-image"]]/@href'
-        ).get()
+        item["image_url"] = response.xpath('//div[@class="eh-carousel-centered-container" or @class="eh-object-detail-image-container"]/a/@href').get()
         item["source_1"] = response.url
 
         museum_coords = self.coords.get(item['institution_name'])
