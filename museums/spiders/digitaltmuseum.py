@@ -20,14 +20,10 @@ class DigitaltmuseumSpider(scrapy.Spider):
             yield response.follow(l, callback=self.parse_owner_page)
 
     def parse_owner_page(self, response):
-        museum_name = response.xpath(
-            '//meta[@property="og:description"]/@content'
-        ).get()
         latitude = response.xpath('//figure[@class="c-owner-map"]/@lat').get()
         longitude = response.xpath('//figure[@class="c-owner-map"]/@lng').get()
 
         meta_dict = {
-            "institution_name": museum_name,
             "latitude": latitude,
             "longitude": longitude,
         }
@@ -43,7 +39,6 @@ class DigitaltmuseumSpider(scrapy.Spider):
 
     def parse_search_page(self, response):
         meta_dict = {
-            "institution_name": response.meta.get("institution_name"),
             "latitude": response.meta.get("latitude"),
             "longitude": response.meta.get("longitude"),
         }
@@ -81,7 +76,7 @@ class DigitaltmuseumSpider(scrapy.Spider):
         item["object_number"] = "".join(
             response.xpath('//li[./b[text()="DIMU-CODE"]]/text()').getall()
         ).strip()
-        item["institution_name"] = response.meta.get("institution_name")
+        item["institution_name"] = response.xpath('//li[./b[text()="Institution"]]/a/text()').get()
         item["institution_latitude"] = response.meta.get("institution_latitude")
         item["institution_longitude"] = response.meta.get("institution_longitude")
         item["department"] = "".join(
