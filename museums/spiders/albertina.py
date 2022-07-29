@@ -544,7 +544,7 @@ class AlbertinaSpider(scrapy.Spider):
         # XXX: from_location, culture, date...
         item["maker_full_name"] = "|".join(
             sel.xpath(
-                '//span[@class="recordViewRecordfieldValueHyperlinked"]/text()'
+                '//div[contains(@class, "recordViewTabInner")]//span[@class="recordViewRecordfieldValueHyperlinked"]/text()'
             ).getall()
         )
         item["credit_line"] = sel.xpath(
