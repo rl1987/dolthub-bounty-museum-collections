@@ -44,13 +44,9 @@ class CambridgemaaSpider(scrapy.Spider):
         if len(json_dict.get("results", [])) < 10:
             return
 
-        o = urlparse(response.url)
-        params = dict(parse_qsl(o.query))
-        query_dict = json.loads(params['query'])
-        query_dict['currentPage'] += 1
-        params['query'] = json.dumps(query_dict)
-        next_page_url = o.scheme + '://' + o.netloc + o.path + '?' + urlencode(params)
-        yield scrapy.Request(next_page_url, callback=self.parse_search_page, headers={'Accept': 'application/json'})
+        next_page_url = json_dict.get("next")
+        if next_page_url is not None:
+            yield scrapy.Request(next_page_url, callback=self.parse_search_page, headers={'Accept': 'application/json'})
 
     def parse_object_page(self, response):
         json_dict = json.loads(response.text)
