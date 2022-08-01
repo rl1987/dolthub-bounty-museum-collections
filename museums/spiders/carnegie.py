@@ -193,7 +193,6 @@ class CarnegieSpider(scrapy.Spider):
 
         item = ObjectItem()
 
-        item["object_number"] = json_dict.get("id")
         item["institution_name"] = "Carnegie Museum of Art"
         item["institution_city"] = "Pittsburgh"
         item["institution_state"] = "PA"
@@ -236,6 +235,7 @@ class CarnegieSpider(scrapy.Spider):
             pass
 
         item["acquired_from"] = json_dict.get("acquisition_method")
+        item["object_number"] = json_dict.get("accession_number")
         item["accession_number"] = json_dict.get("accession_number")
         item["credit_line"] = json_dict.get("credit_line")
 
