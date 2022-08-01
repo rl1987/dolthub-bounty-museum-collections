@@ -72,7 +72,8 @@ class CambridgemaaSpider(scrapy.Spider):
             item['description'] = item['description'].replace("<br />", " ")
         item['dimensions'] = payload.get("dimensions")
         item['materials'] = "|".join(list(map(lambda m: m.get("name"), payload.get("material", []))))
-        item['technique'] = payload.get("format", dict()).get("name")
+        if payload.get("format") is not None:
+            item['technique'] = payload.get("format", dict()).get("name")
         item['from_location'] = payload.get("de_norm_place")
         item['culture'] = "|".join(list(map(lambda c: c.get("name"), payload.get("culture_group", []))))
         if payload.get("date") is not None:
