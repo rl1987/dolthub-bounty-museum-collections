@@ -9,7 +9,7 @@ class BranlySpider(scrapy.Spider):
     start_urls = [
         "https://www.quaibranly.fr/en/explore-collections/base/Work/action/show/notice/"
         + str(i)
-        for i in range(1, 10000000)
+        for i in range(1, 1000000)
     ]
 
     def start_requests(self):
