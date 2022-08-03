@@ -96,7 +96,33 @@ class NgagovauSpider(scrapy.Spider):
             except:
                 pass
 
-            item["maker_full_name"] = "|".join(item_dict.get("creators", []))
+            creators_json_str = item_dict.get("creatorsJson")
+            if creators_json_str is not None:
+                creators_json_arr = json.loads(creators_json_str)
+
+                maker_birth_years = []
+                maker_death_years = []
+                maker_names = []
+                maker_roles = []
+
+                for creator_dict in creators_json_arr:
+                    birth_year = creator_dict.get("BioBirthEarliestDate", "")
+                    maker_birth_years.append(birth_year)
+                    death_year = creator_dict.get("BioDeathEarliestDate", "")
+                    maker_death_years.append(death_year)
+                    name = creator_dict.get("NamFullName", "")
+                    maker_names.append(name)
+                    role = creator_dict.get("CreRole_tab", "")
+                    maker_roles.append(role)
+
+                item["maker_birth_year"] = "|".join(maker_birth_years)
+                item["maker_death_year"] = "|".join(maker_death_years)
+                item["maker_full_name"] = "|".join(maker_names)
+                item["maker_role"] = "|".join(maker_roles)
+            else:
+                item["maker_full_name"] = "|".join(item_dict.get("creators", []))
+                item["maker_role"] = "|".join(item_dict.get("roles", []))
+
             try:
                 item["accession_year"] = int(
                     item_dict.get("accessionMeetingDate", "").split("-")[0]
