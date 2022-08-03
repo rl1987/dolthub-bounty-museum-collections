@@ -34,6 +34,9 @@ class NzmuseumsSpider(scrapy.Spider):
             .strip()
         )
 
+        if item["object_number"] == "":
+            item["object_number"] = response.url.split("/")[-2]
+
         item["institution_name"] = response.xpath(
             '//div[@class="card"]/div[@class="card-body"]/a/text()'
         ).get()
