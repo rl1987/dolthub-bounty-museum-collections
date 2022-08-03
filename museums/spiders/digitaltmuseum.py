@@ -76,7 +76,9 @@ class DigitaltmuseumSpider(scrapy.Spider):
         item["object_number"] = "".join(
             response.xpath('//li[./b[text()="DIMU-CODE"]]/text()').getall()
         ).strip()
-        item["institution_name"] = response.xpath('//li[./b[text()="Institution"]]/a/text()').get()
+        item["institution_name"] = response.xpath(
+            '//li[./b[text()="Institution"]]/a/text()'
+        ).get()
         item["institution_latitude"] = response.meta.get("latitude")
         item["institution_longitude"] = response.meta.get("longitude")
         item["department"] = "".join(

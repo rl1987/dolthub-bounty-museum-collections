@@ -301,11 +301,11 @@ class InstitutionGeoEnrichmentPipeline:
         name = adapter.get("institution_name")
         if self.place_by_name.get(name) is None:
             query = name
-            if adapter.get('institution_city') is not None:
-                query += " " + adapter.get('institution_city')
-            if adapter.get('institution_country') is not None:
-                query += " " + adapter.get('institution_country')
-            
+            if adapter.get("institution_city") is not None:
+                query += " " + adapter.get("institution_city")
+            if adapter.get("institution_country") is not None:
+                query += " " + adapter.get("institution_country")
+
             params = {
                 "fields": "geometry",
                 "key": GOOGLE_API_KEY,

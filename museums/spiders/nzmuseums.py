@@ -2,10 +2,11 @@ import scrapy
 
 from museums.items import ObjectItem
 
+
 class NzmuseumsSpider(scrapy.Spider):
-    name = 'nzmuseums'
-    allowed_domains = ['www.nzmuseums.co.nz']
-    start_urls = ['https://www.nzmuseums.co.nz/objects?view=lightbox']
+    name = "nzmuseums"
+    allowed_domains = ["www.nzmuseums.co.nz"]
+    start_urls = ["https://www.nzmuseums.co.nz/objects?view=lightbox"]
 
     coords = dict()
 
@@ -13,7 +14,9 @@ class NzmuseumsSpider(scrapy.Spider):
         yield scrapy.Request(self.start_urls[0], callback=self.parse_search_page)
 
     def parse_search_page(self, response):
-        for artwork_link in response.xpath('//div[@class="lightbox-object-desc " or contains(@class, "lightbox-item-no-image")]/a/@href'):
+        for artwork_link in response.xpath(
+            '//div[@class="lightbox-object-desc " or contains(@class, "lightbox-item-no-image")]/a/@href'
+        ):
             yield response.follow(artwork_link, callback=self.parse_object_page)
 
         next_page_link = response.xpath('//a[@aria-label="Next"]/@href').get()
@@ -31,7 +34,9 @@ class NzmuseumsSpider(scrapy.Spider):
             .strip()
         )
 
-        item["institution_name"] = response.xpath('//div[@class="card"]/div[@class="card-body"]/a/text()').get()
+        item["institution_name"] = response.xpath(
+            '//div[@class="card"]/div[@class="card-body"]/a/text()'
+        ).get()
 
         item["category"] = (
             response.xpath('//p[contains(@class, "object_type")]/a/text()')
@@ -58,9 +63,11 @@ class NzmuseumsSpider(scrapy.Spider):
             .strip()
         )
 
-        inscriptions = response.xpath('//p[contains(@class, "inscription")]/text()').getall()
+        inscriptions = response.xpath(
+            '//p[contains(@class, "inscription")]/text()'
+        ).getall()
         inscriptions = list(map(lambda i: i.strip(), inscriptions))
-        item['inscription'] = " ".join(inscriptions)
+        item["inscription"] = " ".join(inscriptions)
 
         item["materials"] = response.xpath(
             '//p[contains(@class, "medium_description")]/text()'
@@ -94,32 +101,36 @@ class NzmuseumsSpider(scrapy.Spider):
             .get("")
             .strip()
         )
-        item["image_url"] = response.xpath('//div[@class="eh-carousel-centered-container" or @class="eh-object-detail-image-container"]/a/@href').get()
+        item["image_url"] = response.xpath(
+            '//div[@class="eh-carousel-centered-container" or @class="eh-object-detail-image-container"]/a/@href'
+        ).get()
         item["source_1"] = response.url
 
-        museum_coords = self.coords.get(item['institution_name'])
+        museum_coords = self.coords.get(item["institution_name"])
         if museum_coords is not None:
-            item['institution_latitude'] = museum_coords.get('latitude')
-            item['institution_longitude'] = museum_coords.get('longitude')
+            item["institution_latitude"] = museum_coords.get("latitude")
+            item["institution_longitude"] = museum_coords.get("longitude")
             yield item
         else:
-            museum_link = response.xpath('//div[@class="card"]/div[@class="card-body"]/a/@href').get()
-            yield response.follow(museum_link, callback=self.parse_museum_coords,
-                    meta={'item': item})
+            museum_link = response.xpath(
+                '//div[@class="card"]/div[@class="card-body"]/a/@href'
+            ).get()
+            yield response.follow(
+                museum_link, callback=self.parse_museum_coords, meta={"item": item}
+            )
 
     def parse_museum_coords(self, response):
-        item = response.meta.get('item')
-    
+        item = response.meta.get("item")
+
         institution_latitude = response.xpath('//span[@id="latitude"]/text()').get()
         institution_longitude = response.xpath('//span[@id="longitude"]/text()').get()
-        
-        self.coords[item['institution_name']] = {
-            'latitude': institution_latitude,
-            'longitude': institution_longitude
+
+        self.coords[item["institution_name"]] = {
+            "latitude": institution_latitude,
+            "longitude": institution_longitude,
         }
 
-        item['institution_latitude'] = institution_latitude
-        item['institution_longitude'] = institution_longitude
+        item["institution_latitude"] = institution_latitude
+        item["institution_longitude"] = institution_longitude
 
         yield item
-    
