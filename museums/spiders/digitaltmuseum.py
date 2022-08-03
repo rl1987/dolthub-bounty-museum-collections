@@ -73,9 +73,6 @@ class DigitaltmuseumSpider(scrapy.Spider):
     def parse_object_page(self, response):
         item = ObjectItem()
 
-        item["object_number"] = "".join(
-            response.xpath('//li[./b[text()="DIMU-CODE"]]/text()').getall()
-        ).strip()
         item["institution_name"] = response.xpath(
             '//li[./b[text()="Institution"]]/a/text()'
         ).get()
@@ -124,12 +121,12 @@ class DigitaltmuseumSpider(scrapy.Spider):
         ).get()
         item["source_1"] = response.url
         try:
-            item["accession_number"] = (
+            item["object_number"] = (
                 response.xpath('//li[./b[text()="Identifier"]]/text()')
                 .getall()[-1]
                 .strip()
             )
         except:
-            return
+            item['object_number'] = response.url.split('/')[-2]
 
         yield item
