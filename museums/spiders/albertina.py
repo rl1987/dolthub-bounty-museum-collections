@@ -517,7 +517,7 @@ class AlbertinaSpider(scrapy.Spider):
         item = ObjectItem()
 
         item["object_number"] = sel.xpath(
-            '//div[text()="Inventory number"]/following-sibling::div/text()'
+            '//div[contains(@class, "recordViewRecordfieldValueInventoryNumber")]/text()'
         ).get()
         item["institution_name"] = "Albertina"
         item["institution_city"] = "Vienna"
