@@ -542,11 +542,7 @@ class AlbertinaSpider(scrapy.Spider):
             '//div[text()="Technique"]/following-sibling::div/text()'
         ).get()
         # XXX: from_location, culture, date...
-        item["maker_full_name"] = "|".join(
-            sel.xpath(
-                '//div[contains(@class, "recordViewTabInner")]//span[@class="recordViewRecordfieldValueHyperlinked"]/text()'
-            ).getall()
-        )
+        item["maker_full_name"] = sel.xpath( '//div[contains(@class, "recordViewTabInner")]//span[@class="recordViewRecordfieldValueHyperlinked"]/text()').get()
         item["credit_line"] = sel.xpath(
             '//span[text()="Bibliography"]/following-sibling::div/text()'
         ).get()
