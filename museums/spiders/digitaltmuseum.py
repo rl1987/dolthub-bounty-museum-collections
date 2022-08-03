@@ -90,7 +90,6 @@ class DigitaltmuseumSpider(scrapy.Spider):
                 '//div[@class="article__leadtext"]/div[@class="text__expanded"]/p/text()'
             ).getall()
         ).strip()
-        # XXX: current_location
         item["dimensions"] = " ".join(
             response.xpath('//li[./b[text()="Dimensions"]]/text()').getall()
         ).strip()
@@ -106,7 +105,9 @@ class DigitaltmuseumSpider(scrapy.Spider):
         item["technique"] = "|".join(
             response.xpath('//li[./b[text()="Techniques"]]/a/text()').getall()
         ).strip()
-        # XXX: from_location, culture
+        item['maker_full_name'] = "|".join(response.xpath('//li[./b[text()="Produsent"]]/a/text()').getall())
+        item['from_location'] = "|".join(response.xpath('//li[./b[text()="Place of creation"]]/a/text()').getall())
+        item['description'] = " ".join(response.xpath('//div[@class="article__leadtext"]/p/text()').getall())
         item["date_description"] = " ".join(
             response.xpath('//li[./b[text()="Creation date"]]/text()').getall()
         ).strip()
