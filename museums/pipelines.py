@@ -35,6 +35,9 @@ class ConstraintEnforcementPipeline:
                 )
             )
 
+        if len(object_number) > 50:
+            adapter["object_number"] = object_number[:50]
+
         institution_name = adapter.get("institution_name")
         if institution_name is None or len(institution_name) == 0:
             raise DropItem(
