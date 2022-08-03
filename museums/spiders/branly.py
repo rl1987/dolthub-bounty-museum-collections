@@ -58,10 +58,12 @@ class BranlySpider(scrapy.Spider):
                 '//li[@class="description-item" and ./b[text()="Matériaux et techniques :"]]/text()'
             ).getall()
         ).strip()
-        from_locations = response.xpath('//li[@class="description-item" and ./b[text()="Géographie : "]]/a/text()').getall()
+        from_locations = response.xpath(
+            '//li[@class="description-item" and ./b[text()="Géographie : "]]/a/text()'
+        ).getall()
         from_locations = list(map(lambda fl: fl.strip(), from_locations))
         from_locations = "|".join(from_locations)
-        item['from_location'] = from_locations
+        item["from_location"] = from_locations
         cultures = response.xpath(
             '//li[@class="description-item" and ./b[text()="Culture : "]]/a/text()'
         ).getall()

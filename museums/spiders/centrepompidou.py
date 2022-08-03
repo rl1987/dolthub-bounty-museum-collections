@@ -11,6 +11,7 @@ from museums.items import ObjectItem
 
 from dateutil.parser import parse
 
+
 class CentrepompidouSpider(scrapy.Spider):
     name = "centrepompidou"
     allowed_domains = ["www.centrepompidou.fr"]
@@ -133,18 +134,25 @@ class CentrepompidouSpider(scrapy.Spider):
         ).get()
         item["source_1"] = response.url
 
-        if self.birth_years.get(item['maker_full_name']) is not None or self.death_years.get(item['maker_full_name']) is not None:
-            item['maker_birth_year'] = self.birth_years.get(item['maker_full_name'])
-            item['maker_death_year'] = self.death_years.get(item['maker_full_name'])
+        if (
+            self.birth_years.get(item["maker_full_name"]) is not None
+            or self.death_years.get(item["maker_full_name"]) is not None
+        ):
+            item["maker_birth_year"] = self.birth_years.get(item["maker_full_name"])
+            item["maker_death_year"] = self.death_years.get(item["maker_full_name"])
 
             yield item
         else:
-            artist_link = response.xpath('//tr[./th[contains(text(), "Artist")]]/td/a/@href').get()
+            artist_link = response.xpath(
+                '//tr[./th[contains(text(), "Artist")]]/td/a/@href'
+            ).get()
             if artist_link is not None:
-                yield response.follow(artist_link, meta={'item': item}, callback=self.parse_artist_page)
+                yield response.follow(
+                    artist_link, meta={"item": item}, callback=self.parse_artist_page
+                )
 
     def parse_artist_page(self, response):
-        item = response.meta.get('item')
+        item = response.meta.get("item")
 
         json_str = response.xpath('//script[@type="application/ld+json"]/text()').get()
         json_dict = json.loads(json_str)
@@ -154,15 +162,13 @@ class CentrepompidouSpider(scrapy.Spider):
                 birth_date = node.get("birthDate")
                 if birth_date is not None:
                     birth_year = parse(birth_date).year
-                    self.birth_years[item['maker_full_name']] = birth_year
-                    item['maker_birth_year'] = birth_year
+                    self.birth_years[item["maker_full_name"]] = birth_year
+                    item["maker_birth_year"] = birth_year
 
                 death_date = node.get("deathDate")
                 if death_date is not None:
                     death_year = parse(death_date).year
-                    self.death_years[item['maker_full_name']] = death_year
-                    item['maker_death_year'] = death_year
-        
+                    self.death_years[item["maker_full_name"]] = death_year
+                    item["maker_death_year"] = death_year
+
         yield item
-
-

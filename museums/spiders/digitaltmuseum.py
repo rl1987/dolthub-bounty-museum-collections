@@ -105,9 +105,15 @@ class DigitaltmuseumSpider(scrapy.Spider):
         item["technique"] = "|".join(
             response.xpath('//li[./b[text()="Techniques"]]/a/text()').getall()
         ).strip()
-        item['maker_full_name'] = "|".join(response.xpath('//li[./b[text()="Produsent"]]/a/text()').getall())
-        item['from_location'] = "|".join(response.xpath('//li[./b[text()="Place of creation"]]/a/text()').getall())
-        item['description'] = " ".join(response.xpath('//div[@class="article__leadtext"]/p/text()').getall())
+        item["maker_full_name"] = "|".join(
+            response.xpath('//li[./b[text()="Produsent"]]/a/text()').getall()
+        )
+        item["from_location"] = "|".join(
+            response.xpath('//li[./b[text()="Place of creation"]]/a/text()').getall()
+        )
+        item["description"] = " ".join(
+            response.xpath('//div[@class="article__leadtext"]/p/text()').getall()
+        )
         item["date_description"] = " ".join(
             response.xpath('//li[./b[text()="Creation date"]]/text()').getall()
         ).strip()
@@ -128,6 +134,6 @@ class DigitaltmuseumSpider(scrapy.Spider):
                 .strip()
             )
         except:
-            item['object_number'] = response.url.split('/')[-2]
+            item["object_number"] = response.url.split("/")[-2]
 
         yield item
