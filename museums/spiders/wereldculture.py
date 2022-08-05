@@ -976,7 +976,7 @@ class WereldcultureSpider(scrapy.Spider):
 
         item["source_1"] = sel.xpath(
             '//div[./b[text()="Permanent link to this object : "]]/text()'
-        ).get()
+        ).get("").strip()
 
         item["image_url"] = sel.xpath(
             '//*[@data-drag="true"]/@data-draggingimage'
