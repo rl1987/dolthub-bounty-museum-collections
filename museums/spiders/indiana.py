@@ -23,7 +23,8 @@ class IndianaSpider(scrapy.Spider):
         # XXX: department, category
         item['title'] = response.xpath('//dt[text()="Title"]/following-sibling::dd/text()').get()
         item['description'] = " ".join(response.xpath('//dt[text()="Description"]/following-sibling::dd/p/text()').getall())
-        # XXX: current_location, dimensions, inscription, provenance
+        # XXX: current_location, inscription, provenance
+        item['dimensions'] = response.xpath('//dt[text()="Measurements"]/following-sibling::dd/text()').get()
         item['materials'] = response.xpath('//dt[text()="Materials"]/following-sibling::dd/text()').get()
         # XXX: technique
         item['from_location'] = response.xpath('//dt[text()="Place"]/following-sibling::dd/text()').get()
