@@ -89,10 +89,32 @@ class NzmuseumsSpider(scrapy.Spider):
             '//p[contains(@class, "primary_creator_maker")]/a/text()'
         ).getall()
         # Fuck this is getting repetitive...
-        item["maker_full_name"] = list(
+        makers = list(
             map(lambda m: m.strip(), item["maker_full_name"])
         )
-        item["maker_full_name"] = "|".join(item["maker_full_name"])
+        maker_names = []
+        maker_birth_years = []
+        maker_death_years = []
+
+        for m in makers:
+            name = m.split(" (")[0]
+            maker_names.append(name)
+
+            birth_year = ""
+            death_year = ""
+
+            if "(" in m:
+                years_str = m.split(" (")[-1].split(")")[0]
+                if "-" in years_str:
+                    birth_year = years_str.split("-")[0]
+                    death_year = years_str.split("-")[-1]
+
+            maker_birth_years.append(birth_year)
+            maker_death_years.append(death_year)
+
+        item["maker_full_name"] = "|".join(maker_names)
+        item["maker_birth_year"] = "|".join(maker_birth_years)
+        item["maker_death_year"] = "|".join(maker_death_years)
         item["maker_role"] = response.xpath(
             '//p[contains(@class, "primary_creator_maker_role")]/text()'
         ).getall()
