@@ -954,29 +954,40 @@ class WereldcultureSpider(scrapy.Spider):
         item["institution_country"] = "Netherlands"
         item["institution_latitude"] = 52.3626561
         item["institution_longitude"] = 4.9211787
-        item["title"] = "".join(sel.xpath('//div[@ng-if="cc.language==\'en\'"]/h3[@data-drag="true"]//text()').getall()).strip()
-        
-        lines = sel.xpath('//div[@class="panel-body"]/div[@ng-if="cc.language==\'en\'"]//text()').getall()
+        item["title"] = "".join(
+            sel.xpath(
+                '//div[@ng-if="cc.language==\'en\'"]/h3[@data-drag="true"]//text()'
+            ).getall()
+        ).strip()
 
-        item["description"] = " ".join(lines).strip().split("{{userdata.baskets[$basketIndex].description}}")[0].strip()
+        lines = sel.xpath(
+            '//div[@class="panel-body"]/div[@ng-if="cc.language==\'en\'"]//text()'
+        ).getall()
 
-        for i in range(0, len(lines)-1):
+        item["description"] = (
+            " ".join(lines)
+            .strip()
+            .split("{{userdata.baskets[$basketIndex].description}}")[0]
+            .strip()
+        )
+
+        for i in range(0, len(lines) - 1):
             l = lines[i]
             if l.startswith("Origin") or l.startswith("Herkomst"):
-                item['provenance'] = lines[i+1]
+                item["provenance"] = lines[i + 1]
             elif l.startswith("Medium") or l.startswith("Materiaal"):
-                item['materials'] = lines[i+1]
+                item["materials"] = lines[i + 1]
             elif l.startswith("Culture") or l.startswith("Cultuur"):
-                item['culture'] = lines[i+1]
+                item["culture"] = lines[i + 1]
             elif l.startswith("Credit"):
-                item['credit_line'] = lines[i+1]
+                item["credit_line"] = lines[i + 1]
             elif l.startswith("Inventarisnummer") or l.startswith("Object number"):
-                item['object_number'] = lines[i+1]
+                item["object_number"] = lines[i + 1]
             elif l.startswith("Permanent link"):
-                item['source_1'] = lines[i+1].strip()
+                item["source_1"] = lines[i + 1].strip()
 
             if "cm" in l:
-                item['dimensions'] = l.strip()
+                item["dimensions"] = l.strip()
 
         item["image_url"] = sel.xpath(
             '//*[@data-drag="true"]/@data-draggingimage'

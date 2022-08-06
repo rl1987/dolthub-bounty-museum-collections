@@ -89,9 +89,7 @@ class NzmuseumsSpider(scrapy.Spider):
             '//p[contains(@class, "primary_creator_maker")]/a/text()'
         ).getall()
         # Fuck this is getting repetitive...
-        makers = list(
-            map(lambda m: m.strip(), item["maker_full_name"])
-        )
+        makers = list(map(lambda m: m.strip(), item["maker_full_name"]))
         maker_names = []
         maker_birth_years = []
         maker_death_years = []
