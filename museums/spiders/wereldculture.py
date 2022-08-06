@@ -948,9 +948,6 @@ class WereldcultureSpider(scrapy.Spider):
 
         item = ObjectItem()
 
-        item["object_number"] = sel.xpath(
-            '//strong[text()="Object number : " or text()="Inventarisnummer : "]/following-sibling::text()'
-        ).get()
         item["institution_name"] = "The National Museum of World Cultures"
         item["institution_city"] = "Amsterdam"
         item["institution_state"] = ""
@@ -961,22 +958,25 @@ class WereldcultureSpider(scrapy.Spider):
         
         lines = sel.xpath('//div[@class="panel-body"]/div[@ng-if="cc.language==\'en\'"]//text()').getall()
 
-        item["description"] = " ".join(lines).strip().split("{{userdata.baskets[$basketIndex].description}}")[0]
+        item["description"] = " ".join(lines).strip().split("{{userdata.baskets[$basketIndex].description}}")[0].strip()
 
         for i in range(0, len(lines)-1):
             l = lines[i]
-            if l == "Origin : " or l == "Herkomst : ":
+            if l.startswith("Origin") or l.startswith("Herkomst"):
                 item['provenance'] = lines[i+1]
-            elif l == "Medium : " or l == "Materiaal : ":
+            elif l.startswith("Medium") or l.startswith("Materiaal"):
                 item['materials'] = lines[i+1]
-            elif l == "Culture : " or l == "Cultuur : ":
+            elif l.startswith("Culture") or l.startswith("Cultuur"):
                 item['culture'] = lines[i+1]
-            elif l == "Creditline : ":
+            elif l.startswith("Credit"):
                 item['credit_line'] = lines[i+1]
+            elif l.startswith("Inventarisnummer") or l.startswith("Object number"):
+                item['object_number'] = lines[i+1]
+            elif l.startswith("Permanent link"):
+                item['source_1'] = lines[i+1].strip()
 
-        item["source_1"] = sel.xpath(
-            '//div[./b[text()="Permanent link to this object : "]]/text()'
-        ).get("").strip()
+            if "cm" in l:
+                item['dimensions'] = l.strip()
 
         item["image_url"] = sel.xpath(
             '//*[@data-drag="true"]/@data-draggingimage'
