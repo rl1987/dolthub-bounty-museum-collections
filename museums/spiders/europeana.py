@@ -1,5 +1,6 @@
 import scrapy
 
+import csv
 import json
 from urllib.parse import urlencode, urlparse, parse_qsl
 
@@ -13,7 +14,12 @@ class EuropeanaSpider(scrapy.Spider):
     def __init__(self):
         super().__init__()
 
-        self.slugs = [ '1482250000004516027-tartu-art-museum' ]
+        in_f = open("europeana_prep/filtered_orgs.csv", "r")
+        csv_reader = csv.DictReader(in_f)
+
+        for row in csv_reader:
+            slug = row.get("slug")
+            self.slugs.append(slug)
 
     def start_requests(self):
         for slug in self.slugs:
