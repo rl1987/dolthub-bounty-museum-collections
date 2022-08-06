@@ -17,6 +17,9 @@ def get_answer(institution_name):
     if "Library" in institution_name or "Libraries" in institution_name:
         return "NO"
 
+    if "Private Collection" in institution_name:
+        return "NO"
+
     if "Museum" in institution_name:
         return "YES"
 
