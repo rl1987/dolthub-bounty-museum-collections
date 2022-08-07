@@ -1,5 +1,8 @@
 import scrapy
 
+from urllib.parse import urljoin
+
+from museums.items import ObjectItem
 
 class MuseumseuSpider(scrapy.Spider):
     name = 'museumseu'
@@ -24,4 +27,24 @@ class MuseumseuSpider(scrapy.Spider):
             yield response.follow(l, callback=self.parse_object_list)
 
     def parse_object_page(self, response):
-        pass
+        item = ObjectItem()
+
+        item['object_number'] = response.xpath('//dt[text()="Inventory Number"]/following-sibling::dd/text()').get()
+        item['institution_name'] = response.xpath('//ol[@class="breadcrumb"]//a[starts-with(@href, "/museum/details/")]/text()').get()
+        item['department'] = response.xpath('//dt[text()="Collection"]/following-sibling::dd/a/text()').get()
+        item['category'] = response.xpath('//dt[text()="Object Type"]/following-sibling::dd/text()').get()
+        item['title'] = response.xpath('//h1/text()').get()
+        item['description'] = response.xpath('//hr[@class="sem-separator"]/preceding-sibling::p/text()').get()
+        item['dimensions'] = response.xpath('//dt[text()="Measurements"]/following-sibling::dd/text()').get()
+        item['materials'] = response.xpath('//dt[text()="Materials"]/following-sibling::dd/text()').get()
+        item['technique'] = response.xpath('//dt[text()="Techniques"]/following-sibling::dd/text()').get()
+        item['date_description'] = response.xpath('//dt[text()="Time of Origin"]/following-sibling::dd/text()').get()
+        item['maker_full_name'] = response.xpath('//dt[text()="Author"]/following-sibling::dd/text()').get()
+        item['image_url'] = response.xpath('//a[@id="mainPicture"]/img/@src').get()
+        if item['image_url'] is not None:
+            item['image_url'] = urljoin(response.url, item['image_url'])
+
+        item['source_1'] = response.url
+
+        yield item
+
