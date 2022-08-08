@@ -88,26 +88,3 @@ class BrightDataDownloaderMiddleware:
             username, BRIGHT_DATA_ZONE_PASSWORD
         )
 
-
-import logging
-
-
-class TLSAPIDownloaderMiddleware:
-    def process_request(self, request, spider):
-        if request.url == "http://localhost:8082":
-            return None
-
-        headers = request.headers
-        headers["poptls-url"] = request.url
-
-        request = scrapy.Request(
-            "http://localhost:8082",
-            headers=headers,
-            callback=request.callback,
-            dont_filter=True,
-        )
-
-        logging.info(headers)
-        logging.info(request)
-
-        return request

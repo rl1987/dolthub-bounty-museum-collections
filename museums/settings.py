@@ -53,7 +53,6 @@ BRIGHT_DATA_ZONE_PASSWORD = "lhob01y5af37"
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    #'museums.middlewares.TLSAPIDownloaderMiddleware': 499
     #'museums.middlewares.BrightDataDownloaderMiddleware': 500,
 }
 
