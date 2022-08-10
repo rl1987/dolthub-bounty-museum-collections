@@ -54,6 +54,7 @@ BRIGHT_DATA_ZONE_PASSWORD = "lhob01y5af37"
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     #'museums.middlewares.BrightDataDownloaderMiddleware': 500,
+    'aroay_cloudscraper.downloadermiddlewares.CloudScraperMiddleware': 543, # pip3 install aroay-cloudscraper
 }
 
 # Enable or disable extensions
