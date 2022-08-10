@@ -56,7 +56,7 @@ def main():
         
         print("'{}' -> '{}'".format(description, new_description))
 
-        db.sql('UPDATE `objects` SET `description` = "{}" WHERE `institution_name` = "The National Museum of World Cultures" AND `object_number` = {};'.format(escape(new_description), object_number), result_format="csv")
+        db.sql('UPDATE `objects` SET `description` = "{}" WHERE `institution_name` = "The National Museum of World Cultures" AND `object_number` = "{}";'.format(escape(new_description), object_number), result_format="csv")
 
 if __name__ == "__main__":
     main()
